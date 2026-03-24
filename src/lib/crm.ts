@@ -95,6 +95,10 @@ export async function convertLeadToCustomer(leadId: string, orgId: string) {
       email: lead.email ?? undefined,
       phone: lead.phone ?? undefined,
       notes: lead.notes ?? undefined,
+      address: (lead as never as { address?: string }).address ?? undefined,
+      city: (lead as never as { city?: string }).city ?? undefined,
+      state: (lead as never as { state?: string }).state ?? undefined,
+      zip: (lead as never as { zip?: string }).zip ?? undefined,
     },
   });
 

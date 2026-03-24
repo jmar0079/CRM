@@ -21,7 +21,12 @@ function BookingForm() {
     lastName: "",
     email: "",
     phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
     serviceInterest: "",
+    preferredDate: "",
     notes: "",
   });
 
@@ -79,12 +84,34 @@ function BookingForm() {
         <Input id="email" type="email" value={form.email} onChange={update("email")} required disabled={loading} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="phone">Phone</Label>
-        <Input id="phone" type="tel" value={form.phone} onChange={update("phone")} disabled={loading} />
+        <Label htmlFor="phone">Phone *</Label>
+        <Input id="phone" type="tel" value={form.phone} onChange={update("phone")} required disabled={loading} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="address">Street Address</Label>
+        <Input id="address" value={form.address} onChange={update("address")} disabled={loading} placeholder="123 Main St" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="city">City</Label>
+          <Input id="city" value={form.city} onChange={update("city")} disabled={loading} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="state">State</Label>
+          <Input id="state" value={form.state} onChange={update("state")} disabled={loading} placeholder="TX" maxLength={2} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="zip">ZIP Code</Label>
+          <Input id="zip" value={form.zip} onChange={update("zip")} disabled={loading} maxLength={10} />
+        </div>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="serviceInterest">Service Interested In</Label>
-        <Input id="serviceInterest" value={form.serviceInterest} onChange={update("serviceInterest")} disabled={loading} />
+        <Input id="serviceInterest" value={form.serviceInterest} onChange={update("serviceInterest")} disabled={loading} placeholder="e.g. Roof repair, Painting..." />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="preferredDate">Preferred Date</Label>
+        <Input id="preferredDate" type="date" value={form.preferredDate} onChange={update("preferredDate")} disabled={loading} />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="notes">Additional Notes</Label>

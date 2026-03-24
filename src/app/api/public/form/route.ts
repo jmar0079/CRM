@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { publicLeadFormSchema } from "@/lib/validations";
 import { logActivity, detectDuplicate, createAutoTasks, createDraftQuote } from "@/lib/crm";
+import { sendEmail } from "@/lib/email";
+import { sendSMS } from "@/lib/twilio";
 
 // POST /api/public/form?orgSlug=xxx
 export async function POST(req: Request) {
@@ -51,6 +53,24 @@ export async function POST(req: Request) {
     await logActivity({ orgId: org.id, type: "LEAD_CREATED", description: `Lead submitted via public form`, leadId: lead.id });
     await createAutoTasks({ orgId: org.id, trigger: "LEAD_CREATED", leadId: lead.id });
     await createDraftQuote(org.id, lead.id, leadData.serviceInterest);
+
+    // Send confirmation to the customer
+    const customerName = `${lead.firstName} ${lead.lastName}`;
+    const confirmationMsg = `Hi ${lead.firstName}, thanks for reaching out to ${org.name}! We've received your request and will be in touch shortly to go over details and pricing.`;
+
+    if (lead.email) {
+      sendEmail({
+        to: lead.email,
+        subject: `We received your request — ${org.name}`,
+        html: `<p>Hi ${lead.firstName},</p><p>Thanks for reaching out to <strong>${org.name}</strong>! We've received your service request and will be in touch shortly to go over the details and provide a quote.</p><p>— The ${org.name} Team</p>`,
+      }).catch(() => {}); // non-blocking
+    }
+
+    if (lead.phone) {
+      sendSMS(lead.phone, confirmationMsg).catch(() => {}); // non-blocking
+    }
+
+    void customerName;
 
     return NextResponse.json({ success: true, leadId: lead.id }, { status: 201 });
   } catch (err) {
