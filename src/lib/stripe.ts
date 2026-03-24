@@ -1,9 +1,11 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover" as never,
-  typescript: true,
-});
+export function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-02-25.clover" as never,
+    typescript: true,
+  });
+}
 
 export async function createPaymentLink(
   invoiceId: string,
@@ -11,7 +13,7 @@ export async function createPaymentLink(
   customerEmail: string,
   description: string
 ): Promise<string> {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: [
       {
@@ -34,7 +36,7 @@ export async function createPaymentLink(
 }
 
 export async function createConnectedAccount(email: string): Promise<string> {
-  const account = await stripe.accounts.create({
+  const account = await getStripe().accounts.create({
     type: "express",
     email,
     capabilities: {
@@ -46,7 +48,7 @@ export async function createConnectedAccount(email: string): Promise<string> {
 }
 
 export async function createAccountLink(accountId: string): Promise<string> {
-  const link = await stripe.accountLinks.create({
+  const link = await getStripe().accountLinks.create({
     account: accountId,
     refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/integrations?stripe=refresh`,
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/integrations?stripe=success`,
