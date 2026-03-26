@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +16,7 @@ import {
   BarChart2,
   Settings,
   Zap,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -145,6 +147,13 @@ export function Sidebar({ orgName, userName, userAvatar }: SidebarProps) {
               {userName}
             </p>
           </div>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </aside>
