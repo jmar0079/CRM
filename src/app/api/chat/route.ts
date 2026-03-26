@@ -26,11 +26,12 @@ Here is how the CRM works:
 
 Keep answers short and practical. If you don't know something specific about their data (like their customer names or invoice amounts), tell them you can only see general CRM information, not their specific records. Always be helpful and encouraging.`;
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
 export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return NextResponse.json({ error: "AI not configured" }, { status: 503 });
 
   const { messages } = await req.json();
 
@@ -38,22 +39,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid messages" }, { status: 400 });
   }
 
-  const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
-    systemInstruction: SYSTEM_PROMPT,
-  });
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: SYSTEM_PROMPT,
+    });
 
-  // Convert messages to Gemini history format (all but last)
-  const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }));
+    const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
 
-  const lastMessage = messages[messages.length - 1];
+    const lastMessage = messages[messages.length - 1];
+    const chat = model.startChat({ history });
+    const result = await chat.sendMessage(lastMessage.content);
+    const text = result.response.text();
 
-  const chat = model.startChat({ history });
-  const result = await chat.sendMessage(lastMessage.content);
-  const text = result.response.text();
-
-  return NextResponse.json({ content: text });
+    return NextResponse.json({ content: text });
+  } catch (err) {
+    console.error("Gemini error:", err);
+    return NextResponse.json({ error: "AI request failed" }, { status: 500 });
+  }
 }
