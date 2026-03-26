@@ -57,8 +57,14 @@ export async function POST(req: Request) {
     const text = result.response.text();
 
     return NextResponse.json({ content: text });
-  } catch (err) {
-    console.error("Gemini error:", err);
-    return NextResponse.json({ error: "AI request failed" }, { status: 500 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Gemini error:", msg);
+    const friendly = msg.includes("quota") || msg.includes("429")
+      ? "AI quota exceeded — the API key needs to be activated in Google AI Studio."
+      : msg.includes("404") || msg.includes("not found")
+      ? "AI model not found — check the model name."
+      : "AI request failed. Please try again.";
+    return NextResponse.json({ error: friendly }, { status: 500 });
   }
 }

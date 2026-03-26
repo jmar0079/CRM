@@ -51,17 +51,15 @@ export function ChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        const msg = data.error === "AI not configured"
-          ? "AI not configured yet — add the GEMINI_API_KEY in Vercel settings."
-          : "Something went wrong. Please try again.";
-        setMessages([...next, { role: "assistant", content: msg }]);
+      let data: { content?: string; error?: string } = {};
+      try { data = await res.json(); } catch { /* non-JSON response */ }
+      if (!res.ok || !data.content) {
+        setMessages([...next, { role: "assistant", content: data.error ?? "Something went wrong. Please try again." }]);
       } else {
-        setMessages([...next, { role: "assistant", content: data.content ?? "Sorry, I couldn't get a response." }]);
+        setMessages([...next, { role: "assistant", content: data.content }]);
       }
     } catch {
-      setMessages([...next, { role: "assistant", content: "Something went wrong. Please try again." }]);
+      setMessages([...next, { role: "assistant", content: "Network error. Please check your connection." }]);
     } finally {
       setLoading(false);
     }
