@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "AI not configured" }, { status: 503 });
 
   const { messages } = await req.json();
@@ -40,31 +40,25 @@ export async function POST(req: Request) {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: SYSTEM_PROMPT,
+    const groq = new Groq({ apiKey });
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...messages.map((m: { role: string; content: string }) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+      ],
+      max_tokens: 512,
     });
 
-    const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-
-    const lastMessage = messages[messages.length - 1];
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessage(lastMessage.content);
-    const text = result.response.text();
-
+    const text = completion.choices[0]?.message?.content ?? "Sorry, I couldn't get a response.";
     return NextResponse.json({ content: text });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("Gemini error:", msg);
-    const friendly = msg.includes("quota") || msg.includes("429")
-      ? "AI quota exceeded — the API key needs to be activated in Google AI Studio."
-      : msg.includes("404") || msg.includes("not found")
-      ? "AI model not found — check the model name."
-      : "AI request failed. Please try again.";
-    return NextResponse.json({ error: friendly }, { status: 500 });
+    console.error("Groq error:", msg);
+    return NextResponse.json({ error: "AI request failed. Please try again." }, { status: 500 });
   }
 }
