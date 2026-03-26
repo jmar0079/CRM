@@ -5,12 +5,12 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { ConvertButton } from "@/components/ui/convert-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Phone,
   Mail,
   ArrowLeft,
-  UserCheck,
   MapPin,
   Tag,
   Clock,
@@ -98,12 +98,7 @@ export default async function LeadDetailPage({
             </a>
           )}
           {!lead.convertedToId && (
-            <form action={`/api/leads/${lead.id}/convert`} method="POST">
-              <Button size="sm">
-                <UserCheck className="h-4 w-4" />
-                Convert to Customer
-              </Button>
-            </form>
+            <ConvertButton leadId={lead.id} />
           )}
           <DeleteButton
             apiPath={`/api/leads/${lead.id}`}
