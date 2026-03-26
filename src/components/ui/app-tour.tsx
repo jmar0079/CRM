@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Joyride, { CallBackProps, STATUS, type Step } from "react-joyride";
+import { Joyride, STATUS, type Step, type EventData } from "react-joyride";
 
 const steps: Step[] = [
   {
@@ -15,7 +15,7 @@ const steps: Step[] = [
       </div>
     ),
     placement: "center",
-    disableBeacon: true,
+    skipBeacon: true,
   },
   {
     target: "[data-tour='leads']",
@@ -27,7 +27,7 @@ const steps: Step[] = [
         </p>
       </div>
     ),
-    disableBeacon: true,
+    skipBeacon: true,
   },
   {
     target: "[data-tour='customers']",
@@ -39,7 +39,7 @@ const steps: Step[] = [
         </p>
       </div>
     ),
-    disableBeacon: true,
+    skipBeacon: true,
   },
   {
     target: "[data-tour='quotes']",
@@ -51,7 +51,7 @@ const steps: Step[] = [
         </p>
       </div>
     ),
-    disableBeacon: true,
+    skipBeacon: true,
   },
   {
     target: "[data-tour='invoices']",
@@ -63,7 +63,7 @@ const steps: Step[] = [
         </p>
       </div>
     ),
-    disableBeacon: true,
+    skipBeacon: true,
   },
   {
     target: "[data-tour='settings']",
@@ -75,7 +75,7 @@ const steps: Step[] = [
         </p>
       </div>
     ),
-    disableBeacon: true,
+    skipBeacon: true,
   },
 ];
 
@@ -90,7 +90,7 @@ export function AppTour() {
     }
   }, []);
 
-  function handleCallback(data: CallBackProps) {
+  function handleCallback(data: EventData) {
     const { status } = data;
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       localStorage.setItem("tour-completed", "true");
@@ -103,14 +103,13 @@ export function AppTour() {
       steps={steps}
       run={run}
       continuous
-      showProgress
-      showSkipButton
-      callback={handleCallback}
+      onEvent={handleCallback}
+      options={{
+        primaryColor: "#2563eb",
+        zIndex: 10000,
+        showProgress: true,
+      }}
       styles={{
-        options: {
-          primaryColor: "#2563eb",
-          zIndex: 10000,
-        },
         tooltip: {
           borderRadius: "0.75rem",
           padding: "1rem",
