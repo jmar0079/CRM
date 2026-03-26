@@ -74,8 +74,13 @@ export default async function CustomersPage({ searchParams }: PageProps) {
           <tbody className="divide-y divide-slate-100">
             {customers.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-slate-400">
-                  No customers yet.
+                <td colSpan={6} className="px-4 py-12 text-center">
+                  <p className="text-slate-500 font-medium">No customers yet</p>
+                  <p className="text-sm text-slate-400 mt-1 mb-3">Customers are created when you convert a lead, or you can add one manually.</p>
+                  <div className="flex justify-center gap-3">
+                    <Link href="/customers/new" className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">Add a customer</Link>
+                    <Link href="/leads" className="inline-flex items-center rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">View leads to convert</Link>
+                  </div>
                 </td>
               </tr>
             ) : (

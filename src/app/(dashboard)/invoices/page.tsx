@@ -76,8 +76,13 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
           <tbody className="divide-y divide-slate-100">
             {invoices.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
-                  No invoices found.
+                <td colSpan={7} className="px-4 py-12 text-center">
+                  <p className="text-slate-500 font-medium">No invoices yet</p>
+                  <p className="text-sm text-slate-400 mt-1 mb-3">Invoices are generated from approved quotes. Once a quote is accepted, you can convert it to an invoice.</p>
+                  <div className="flex justify-center gap-3">
+                    <Link href="/quotes" className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">View quotes</Link>
+                    <Link href="/help" className="inline-flex items-center rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">How invoices work</Link>
+                  </div>
                 </td>
               </tr>
             ) : (

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { AppTour } from "@/components/ui/app-tour";
 
 export default async function DashboardLayout({
   children,
@@ -25,6 +26,7 @@ export default async function DashboardLayout({
         <Topbar />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
+      <AppTour />
     </div>
   );
 }

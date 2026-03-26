@@ -17,70 +17,24 @@ import {
   Settings,
   Zap,
   LogOut,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Leads",
-    href: "/leads",
-    icon: Users,
-  },
-  {
-    label: "Customers",
-    href: "/customers",
-    icon: UserCheck,
-  },
-  {
-    label: "Pipeline",
-    href: "/pipeline",
-    icon: Zap,
-  },
-  {
-    label: "Jobs",
-    href: "/jobs",
-    icon: Briefcase,
-  },
-  {
-    label: "Calendar",
-    href: "/calendar",
-    icon: Calendar,
-  },
-  {
-    label: "Tasks",
-    href: "/tasks",
-    icon: CheckSquare,
-  },
-  {
-    label: "Messages",
-    href: "/messages",
-    icon: MessageSquare,
-  },
-  {
-    label: "Quotes",
-    href: "/quotes",
-    icon: FileText,
-  },
-  {
-    label: "Invoices",
-    href: "/invoices",
-    icon: Receipt,
-  },
-  {
-    label: "Analytics",
-    href: "/analytics",
-    icon: BarChart2,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, tour: "dashboard" },
+  { label: "Leads", href: "/leads", icon: Users, tour: "leads" },
+  { label: "Customers", href: "/customers", icon: UserCheck, tour: "customers" },
+  { label: "Pipeline", href: "/pipeline", icon: Zap, tour: "pipeline" },
+  { label: "Jobs", href: "/jobs", icon: Briefcase, tour: "jobs" },
+  { label: "Calendar", href: "/calendar", icon: Calendar, tour: "calendar" },
+  { label: "Tasks", href: "/tasks", icon: CheckSquare, tour: "tasks" },
+  { label: "Messages", href: "/messages", icon: MessageSquare, tour: "messages" },
+  { label: "Quotes", href: "/quotes", icon: FileText, tour: "quotes" },
+  { label: "Invoices", href: "/invoices", icon: Receipt, tour: "invoices" },
+  { label: "Analytics", href: "/analytics", icon: BarChart2, tour: "analytics" },
+  { label: "Settings", href: "/settings", icon: Settings, tour: "settings" },
+  { label: "Help", href: "/help", icon: HelpCircle, tour: "help" },
 ];
 
 interface SidebarProps {
@@ -115,6 +69,7 @@ export function Sidebar({ orgName, userName, userAvatar }: SidebarProps) {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  data-tour={item.tour}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive

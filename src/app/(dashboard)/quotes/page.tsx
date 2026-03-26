@@ -70,8 +70,13 @@ export default async function QuotesPage({ searchParams }: PageProps) {
           <tbody className="divide-y divide-slate-100">
             {quotes.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
-                  No quotes yet.
+                <td colSpan={7} className="px-4 py-12 text-center">
+                  <p className="text-slate-500 font-medium">No quotes yet</p>
+                  <p className="text-sm text-slate-400 mt-1 mb-3">Quotes are automatically created when a lead comes in, or you can create one manually.</p>
+                  <div className="flex justify-center gap-3">
+                    <Link href="/leads" className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">View leads</Link>
+                    <Link href="/help" className="inline-flex items-center rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">How quotes work</Link>
+                  </div>
                 </td>
               </tr>
             ) : (

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
+import { OnboardingChecklist } from "@/components/ui/onboarding-checklist";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -103,6 +104,18 @@ export default async function DashboardPage() {
   const session = await auth();
   const stats = await getDashboardStats(session!.user.orgId);
 
+  // Onboarding data
+  const [org, serviceCount, leadCount, customerCount] = await Promise.all([
+    db.organization.findUnique({ where: { id: session!.user.orgId }, select: { phone: true, slug: true, address: true } }),
+    db.service.count({ where: { orgId: session!.user.orgId } }),
+    db.lead.count({ where: { orgId: session!.user.orgId } }),
+    db.customer.count({ where: { orgId: session!.user.orgId } }),
+  ]);
+
+  const hasOrg = !!(org?.phone || org?.address);
+  const hasService = serviceCount > 0;
+  const hasLead = leadCount > 0 || customerCount > 0;
+
   const statCards = [
     {
       title: "Total Leads",
@@ -154,6 +167,14 @@ export default async function DashboardPage() {
         </h1>
         <p className="mt-1 text-slate-500">Here&apos;s what&apos;s happening today.</p>
       </div>
+
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist
+        hasOrg={hasOrg}
+        hasService={hasService}
+        hasLead={hasLead}
+        orgSlug={org?.slug ?? ""}
+      />
 
       {/* Alert banners */}
       {(stats.overdueInvoices > 0 || stats.pendingTasks > 0) && (

@@ -123,15 +123,14 @@ export default async function LeadsPage({ searchParams }: PageProps) {
               <tr>
                 <td
                   colSpan={7}
-                  className="px-4 py-12 text-center text-slate-400"
+                  className="px-4 py-12 text-center"
                 >
-                  No leads found.{" "}
-                  <Link
-                    href="/leads/new"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Add your first lead
-                  </Link>
+                  <p className="text-slate-500 font-medium">No leads yet</p>
+                  <p className="text-sm text-slate-400 mt-1 mb-3">Leads appear here when someone fills out your booking form, or you can add one manually.</p>
+                  <div className="flex justify-center gap-3">
+                    <Link href="/leads/new" className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">Add a lead</Link>
+                    <Link href="/help" className="inline-flex items-center rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">Get your booking link</Link>
+                  </div>
                 </td>
               </tr>
             ) : (
