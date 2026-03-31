@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Send, CheckCircle, Trash2, Loader2, Link as LinkIcon } from "lucide-react";
 
 interface InvoiceActionsProps {
-  invoice: { id: string; status: string };
+  invoice: { id: string; status: string; amountDue: number };
   portalToken: string | null;
+  customerEmail: string | null;
 }
 
-export function InvoiceActions({ invoice, portalToken }: InvoiceActionsProps) {
+export function InvoiceActions({ invoice, portalToken, customerEmail }: InvoiceActionsProps) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -31,6 +32,23 @@ export function InvoiceActions({ invoice, portalToken }: InvoiceActionsProps) {
     }
   }
 
+  async function handleSendInvoice() {
+    setBusy("send");
+    try {
+      const res = await fetch(`/api/invoices/${invoice.id}/send`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to send");
+      }
+      alert("Invoice sent to customer successfully!");
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to send invoice");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function handleDelete() {
     if (!confirm("Delete this invoice? This cannot be undone.")) return;
     setBusy("delete");
@@ -44,21 +62,20 @@ export function InvoiceActions({ invoice, portalToken }: InvoiceActionsProps) {
     }
   }
 
-  const isDraft = invoice.status === "DRAFT";
-  const isUnpaid = !["PAID", "VOID", "CANCELLED"].includes(invoice.status);
+  const canSend = customerEmail && invoice.amountDue > 0 && !["PAID", "VOID"].includes(invoice.status);
+  const isUnpaid = !["PAID", "VOID"].includes(invoice.status);
 
   return (
     <div className="flex gap-2 flex-wrap">
-      {isDraft && (
+      {canSend && (
         <Button
           size="sm"
-          variant="outline"
           disabled={busy !== null}
-          onClick={() => patch({ status: "SENT", sentAt: new Date().toISOString() }, "mark as sent")}
-          className="text-blue-700 border-blue-300 hover:bg-blue-50"
+          onClick={handleSendInvoice}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
         >
-          {busy === "mark as sent" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          Mark as Sent
+          {busy === "send" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Send Invoice
         </Button>
       )}
       {isUnpaid && (

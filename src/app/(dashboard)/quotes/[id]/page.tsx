@@ -46,8 +46,8 @@ export default async function QuoteDetailPage({
   const quote = await db.quote.findFirst({
     where: { id, orgId },
     include: {
-      customer: true,
-      lead: true,
+      customer: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+      lead: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
       items: { orderBy: { position: "asc" } },
       invoice: { select: { id: true, invoiceNumber: true } },
     },

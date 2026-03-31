@@ -591,6 +591,7 @@ model Invoice {
   notes           String?
   dueAt           DateTime?
   paidAt          DateTime?
+  sentAt          DateTime?
   stripeInvoiceId String?
   paymentLink     String?
   createdAt       DateTime      @default(now())

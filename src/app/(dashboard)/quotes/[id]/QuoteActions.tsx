@@ -22,6 +22,15 @@ export function QuoteActions({ quote }: QuoteActionsProps) {
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed");
+      const json = await res.json();
+      // If approving created a new invoice, offer to navigate to it
+      if (json.invoiceId) {
+        const go = confirm(`Invoice created successfully! Go to invoice now?`);
+        if (go) {
+          router.push(`/invoices/${json.invoiceId}`);
+          return;
+        }
+      }
       router.refresh();
     } catch {
       alert(`Failed to ${label.toLowerCase()}`);

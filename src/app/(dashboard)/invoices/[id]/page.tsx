@@ -78,7 +78,7 @@ export default async function InvoiceDetailPage({
           </div>
         </div>
 
-        <InvoiceActions invoice={{ id: invoice.id, status: invoice.status }} portalToken={invoice.customer.portalToken ?? null} />
+        <InvoiceActions invoice={{ id: invoice.id, status: invoice.status, amountDue: invoice.amountDue }} portalToken={invoice.customer.portalToken ?? null} customerEmail={invoice.customer.email ?? null} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
