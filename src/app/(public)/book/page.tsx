@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +33,13 @@ const CONFIG = {
 
 type FormType = keyof typeof CONFIG;
 
+interface CatalogService {
+  id: string;
+  name: string;
+  price: number | null;
+  category: string | null;
+}
+
 interface BookingFormProps {
   orgSlug: string;
   formType: FormType;
@@ -44,6 +51,10 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [services, setServices] = useState<CatalogService[]>([]);
+  // "catalog" = user chose a catalog service; "custom" = user chose Custom/Other or no services
+  const [servicePickMode, setServicePickMode] = useState<"catalog" | "custom">("catalog");
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -53,14 +64,37 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
     city: "",
     state: "",
     zip: "",
+    serviceId: "",
     serviceInterest: "",
     preferredDate: "",
     notes: "",
   });
 
+  // Fetch catalog services for SERVICE mode
+  useEffect(() => {
+    if (!orgSlug || formType !== "SERVICE") return;
+    fetch(`/api/public/services?orgSlug=${encodeURIComponent(orgSlug)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.services)) setServices(data.services);
+      })
+      .catch(() => {}); // silent — falls back to plain text input
+  }, [orgSlug, formType]);
+
   function update(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [field]: e.target.value }));
+  }
+
+  function handleServiceSelect(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value;
+    if (val === "custom" || val === "") {
+      setServicePickMode("custom");
+      setForm((f) => ({ ...f, serviceId: "", serviceInterest: "" }));
+    } else {
+      setServicePickMode("catalog");
+      setForm((f) => ({ ...f, serviceId: val, serviceInterest: "" }));
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -92,6 +126,11 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
       </div>
     );
   }
+
+  // Service interest section — dropdown when catalog services exist (SERVICE mode only)
+  const showCatalogDropdown = formType === "SERVICE" && services.length > 0;
+  const showCustomTextInput =
+    formType !== "SERVICE" || services.length === 0 || servicePickMode === "custom";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -131,16 +170,41 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
           <Input id="zip" value={form.zip} onChange={update("zip")} disabled={loading} maxLength={10} />
         </div>
       </div>
+
+      {/* Service interest — dropdown + optional custom input */}
       <div className="space-y-1.5">
-        <Label htmlFor="serviceInterest">{cfg.interestLabel}</Label>
-        <Input
-          id="serviceInterest"
-          value={form.serviceInterest}
-          onChange={update("serviceInterest")}
-          disabled={loading}
-          placeholder={cfg.interestPlaceholder}
-        />
+        <Label htmlFor="serviceSelect">{cfg.interestLabel}</Label>
+        {showCatalogDropdown && (
+          <select
+            id="serviceSelect"
+            disabled={loading}
+            onChange={handleServiceSelect}
+            defaultValue=""
+            className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+          >
+            <option value="" disabled>Select a service…</option>
+            {services.map((svc) => (
+              <option key={svc.id} value={svc.id}>
+                {svc.name}
+                {svc.price != null
+                  ? ` — $${svc.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  : ""}
+              </option>
+            ))}
+            <option value="custom">Custom / Other…</option>
+          </select>
+        )}
+        {showCustomTextInput && (
+          <Input
+            id="serviceInterest"
+            value={form.serviceInterest}
+            onChange={update("serviceInterest")}
+            disabled={loading}
+            placeholder={cfg.interestPlaceholder}
+          />
+        )}
       </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="preferredDate">Preferred Date</Label>
         <Input id="preferredDate" type="date" value={form.preferredDate} onChange={update("preferredDate")} disabled={loading} />

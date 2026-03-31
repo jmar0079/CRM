@@ -154,7 +154,8 @@ export const publicLeadFormSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   zip: z.string().optional(),
-  serviceInterest: z.string().optional(),
+  serviceId: z.string().optional(),      // catalog service selection
+  serviceInterest: z.string().optional(), // free-text / custom
   preferredDate: z.string().optional(),
   notes: z.string().optional(),
   orgSlug: z.string().min(1),

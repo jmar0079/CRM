@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, duplicate: true }, { status: 200 });
     }
 
-    const { orgSlug: _slug, preferredDate: _date, ...leadData } = parsed.data;
+    const { orgSlug: _slug, preferredDate: _date, serviceId, ...leadData } = parsed.data;
     const lead = await db.lead.create({
       data: {
         ...leadData,
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     await logActivity({ orgId: org.id, type: "LEAD_CREATED", description: `Lead submitted via public form`, leadId: lead.id });
     await createAutoTasks({ orgId: org.id, trigger: "LEAD_CREATED", leadId: lead.id });
-    await createDraftQuote(org.id, lead.id, leadData.serviceInterest);
+    await createDraftQuote(org.id, lead.id, leadData.serviceInterest, serviceId);
 
     // Send confirmation to the customer
     const customerName = `${lead.firstName} ${lead.lastName}`;

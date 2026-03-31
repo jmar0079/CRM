@@ -199,10 +199,23 @@ export async function createAutoTasks(params: {
 export async function createDraftQuote(
   orgId: string,
   leadId: string,
-  notes?: string | null
+  notes?: string | null,
+  serviceId?: string | null
 ) {
   const quoteNumber = await generateQuoteNumber(orgId);
   const approvalToken = generateToken();
+
+  // Look up service price if a catalog service was selected
+  let service: { id: string; name: string; price: number | null } | null = null;
+  if (serviceId) {
+    service = await db.service.findFirst({
+      where: { id: serviceId, orgId },
+      select: { id: true, name: true, price: true },
+    });
+  }
+
+  const serviceTotal = service?.price ?? 0;
+
   const quote = await db.quote.create({
     data: {
       orgId,
@@ -210,6 +223,22 @@ export async function createDraftQuote(
       quoteNumber,
       approvalToken,
       ...(notes ? { notes } : {}),
+      ...(service
+        ? {
+            subtotal: serviceTotal,
+            total: serviceTotal,
+            items: {
+              create: {
+                description: service.name,
+                qty: 1,
+                unitPrice: serviceTotal,
+                total: serviceTotal,
+                position: 0,
+                ...(service.id ? { serviceId: service.id } : {}),
+              },
+            },
+          }
+        : {}),
     },
   });
   await logActivity({
