@@ -13,9 +13,11 @@ export const metadata: Metadata = { title: "Customer Portal" };
 export default async function PortalPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: Promise<{ token?: string }>;
 }) {
-  if (!searchParams.token) {
+  const { token } = await searchParams;
+
+  if (!token) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="text-center">
@@ -29,7 +31,7 @@ export default async function PortalPage({
   }
 
   const customer = await db.customer.findFirst({
-    where: { portalToken: searchParams.token },
+    where: { portalToken: token },
     include: {
       invoices: {
         orderBy: { createdAt: "desc" },

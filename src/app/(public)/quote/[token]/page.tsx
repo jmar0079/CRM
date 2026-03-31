@@ -8,10 +8,11 @@ export const metadata: Metadata = { title: "Review Your Quote" };
 export default async function QuoteApprovalPage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
+  const { token } = await params;
   const quote = await db.quote.findUnique({
-    where: { approvalToken: params.token },
+    where: { approvalToken: token },
     include: {
       items: true,
       organization: { select: { name: true, phone: true, email: true } },

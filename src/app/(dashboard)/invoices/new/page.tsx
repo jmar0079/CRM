@@ -68,13 +68,13 @@ function NewInvoiceForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
           customerId: form.customerId || undefined,
           jobId: form.jobId || undefined,
-          dueDate: new Date(form.dueDate).toISOString(),
+          dueAt: new Date(form.dueDate).toISOString(),
           taxRate: parseFloat(form.taxRate) || 0,
-          discount: parseFloat(form.discount) || 0,
-          items,
+          discountAmt: parseFloat(form.discount) || 0,
+          notes: form.notes || undefined,
+          items: items.map((i) => ({ description: i.description, qty: i.quantity, unitPrice: i.unitPrice })),
         }),
       });
       const data = await res.json();

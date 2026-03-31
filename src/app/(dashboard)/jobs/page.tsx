@@ -13,13 +13,14 @@ export const metadata: Metadata = { title: "Jobs" };
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: { status?: string; page?: string };
+  searchParams: Promise<{ status?: string; page?: string }>;
 }) {
   const session = await auth();
   const orgId = session!.user.orgId;
-  const page = parseInt(searchParams.page ?? "1");
+  const { page: pageParam, status } = await searchParams;
+  const page = parseInt(pageParam ?? "1");
   const pageSize = 25;
-  const statusFilter = searchParams.status as JobStatus | undefined;
+  const statusFilter = status as JobStatus | undefined;
 
   const where = {
     orgId,

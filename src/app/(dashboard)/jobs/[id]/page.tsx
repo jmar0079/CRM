@@ -20,13 +20,14 @@ export const metadata: Metadata = { title: "Job Detail" };
 export default async function JobDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await auth();
   const orgId = session!.user.orgId;
 
   const job = await db.job.findFirst({
-    where: { id: params.id, orgId },
+    where: { id, orgId },
     include: {
       customer: true,
       tasks: { orderBy: { dueAt: "asc" } },

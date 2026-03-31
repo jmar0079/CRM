@@ -9,10 +9,11 @@ export const metadata: Metadata = { title: "Leave a Review" };
 export default async function ReviewPage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
+  const { token } = await params;
   const review = await db.review.findUnique({
-    where: { reviewToken: params.token },
+    where: { reviewToken: token },
     include: {
       customer: { select: { firstName: true, lastName: true } },
       organization: { select: { name: true } },
@@ -53,7 +54,7 @@ export default async function ReviewPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ReviewForm reviewToken={params.token} />
+            <ReviewForm reviewToken={token} />
           </CardContent>
         </Card>
       </div>

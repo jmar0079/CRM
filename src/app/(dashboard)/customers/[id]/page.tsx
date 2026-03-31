@@ -11,15 +11,16 @@ import { ArrowLeft, Mail, Phone, MapPin, Plus, FileText, Briefcase } from "lucid
 import { DeleteButton } from "@/components/ui/delete-button";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function CustomerDetailPage({ params }: Props) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user?.orgId) return notFound();
 
   const customer = await db.customer.findFirst({
-    where: { id: params.id, orgId: session.user.orgId },
+    where: { id, orgId: session.user.orgId },
     include: {
       jobs: {
         orderBy: { scheduledAt: "desc" },
