@@ -26,12 +26,18 @@ export async function POST(req: Request) {
     }
 
     // Duplicate check
-    const dupId = await detectDuplicate(org.id, parsed.data.phone, parsed.data.email);
-    if (dupId) {
+    const dup = await detectDuplicate(org.id, parsed.data.phone, parsed.data.email);
+
+    // If there's already an open (non-archived) lead with the same contact info,
+    // silently succeed — we don't want a second lead for the same open request.
+    if (dup?.type === "lead") {
       return NextResponse.json({ success: true, duplicate: true }, { status: 200 });
     }
 
     const { orgSlug: _slug, preferredDate, serviceId, ...leadData } = parsed.data;
+
+    // For returning customers (dup.type === "customer"), create a new lead so the
+    // request shows up in the CRM — just don't create a duplicate customer record.
     const lead = await db.lead.create({
       data: {
         ...leadData,
@@ -39,6 +45,8 @@ export async function POST(req: Request) {
         source: "WEBSITE",
         status: "NEW",
         ...(preferredDate ? { preferredDate: new Date(preferredDate) } : {}),
+        // If they're already a customer, link the lead to their customer record
+        ...(dup?.type === "customer" ? { convertedToId: dup.id } : {}),
       },
     });
 
