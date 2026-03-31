@@ -4,14 +4,42 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CheckCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
-function BookingForm() {
-  const searchParams = useSearchParams();
-  const orgSlug = searchParams.get("org") ?? "";
+// Labels that change depending on whether the business sells services or products
+const CONFIG = {
+  SERVICE: {
+    pageTitle: "Book an Appointment",
+    pageSubtitle: "Fill out the form and we'll get back to you shortly.",
+    interestLabel: "Service You're Interested In",
+    interestPlaceholder: "e.g. Roof repair, Painting, Cleaning…",
+    submitLabel: "Request Appointment",
+    successTitle: "Request Received!",
+    successMessage: "Thanks! We'll be in touch shortly to confirm your appointment.",
+  },
+  PRODUCT: {
+    pageTitle: "Place an Order",
+    pageSubtitle: "Tell us what you need and we'll get back to you with a quote.",
+    interestLabel: "Product You're Interested In",
+    interestPlaceholder: "e.g. Custom t-shirt, 12\" widget, Bulk order…",
+    submitLabel: "Request a Quote",
+    successTitle: "Order Request Received!",
+    successMessage: "Thanks! We'll be in touch shortly to go over the details.",
+  },
+} as const;
+
+type FormType = keyof typeof CONFIG;
+
+interface BookingFormProps {
+  orgSlug: string;
+  formType: FormType;
+}
+
+function BookingForm({ orgSlug, formType }: BookingFormProps) {
+  const cfg = CONFIG[formType];
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -59,10 +87,8 @@ function BookingForm() {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
         <CheckCircle className="h-16 w-16 text-green-500" />
-        <h2 className="text-2xl font-bold text-slate-900">Request Received!</h2>
-        <p className="text-slate-500 max-w-sm">
-          Thanks! We&apos;ll be in touch shortly to confirm your booking.
-        </p>
+        <h2 className="text-2xl font-bold text-slate-900">{cfg.successTitle}</h2>
+        <p className="text-slate-500 max-w-sm">{cfg.successMessage}</p>
       </div>
     );
   }
@@ -106,8 +132,14 @@ function BookingForm() {
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="serviceInterest">Service Interested In</Label>
-        <Input id="serviceInterest" value={form.serviceInterest} onChange={update("serviceInterest")} disabled={loading} placeholder="e.g. Roof repair, Painting..." />
+        <Label htmlFor="serviceInterest">{cfg.interestLabel}</Label>
+        <Input
+          id="serviceInterest"
+          value={form.serviceInterest}
+          onChange={update("serviceInterest")}
+          disabled={loading}
+          placeholder={cfg.interestPlaceholder}
+        />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="preferredDate">Preferred Date</Label>
@@ -128,28 +160,41 @@ function BookingForm() {
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Request Appointment
+        {cfg.submitLabel}
       </Button>
     </form>
   );
 }
 
-export default function BookPage() {
+// Inner component that reads searchParams (needs Suspense)
+function BookPageContent() {
+  const searchParams = useSearchParams();
+  const orgSlug = searchParams.get("org") ?? "";
+  const rawType = (searchParams.get("type") ?? "SERVICE").toUpperCase();
+  const formType: FormType = rawType === "PRODUCT" ? "PRODUCT" : "SERVICE";
+  const cfg = CONFIG[formType];
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-lg">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">Book an Appointment</h1>
-          <p className="mt-2 text-slate-500">Fill out the form and we&apos;ll get back to you shortly.</p>
+          <h1 className="text-3xl font-bold text-slate-900">{cfg.pageTitle}</h1>
+          <p className="mt-2 text-slate-500">{cfg.pageSubtitle}</p>
         </div>
         <Card>
           <CardContent className="pt-6">
-            <Suspense>
-              <BookingForm />
-            </Suspense>
+            <BookingForm orgSlug={orgSlug} formType={formType} />
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense>
+      <BookPageContent />
+    </Suspense>
   );
 }

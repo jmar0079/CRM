@@ -9,9 +9,13 @@ interface OnboardingChecklist {
   hasService: boolean;
   hasLead: boolean;
   orgSlug: string;
+  bookingMode?: string;
+  bookingFormType?: string;
+  customBookingUrl?: string | null;
+  appUrl?: string;
 }
 
-export function OnboardingChecklist({ hasOrg, hasService, hasLead, orgSlug }: OnboardingChecklist) {
+export function OnboardingChecklist({ hasOrg, hasService, hasLead, orgSlug, bookingMode, bookingFormType, customBookingUrl, appUrl = "" }: OnboardingChecklist) {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -41,8 +45,14 @@ export function OnboardingChecklist({ hasOrg, hasService, hasLead, orgSlug }: On
     {
       done: hasLead,
       label: "Get your first lead or customer",
-      href: `/book?org=${orgSlug}`,
-      desc: "Share your booking link or add one manually",
+      href:
+        bookingMode === "CUSTOM_WEBSITE" && customBookingUrl
+          ? customBookingUrl
+          : `${appUrl}/book?org=${orgSlug}${bookingFormType === "PRODUCT" ? "&type=PRODUCT" : ""}`,
+      desc:
+        bookingMode === "CUSTOM_WEBSITE" && customBookingUrl
+          ? "Share your website form link or add a lead manually"
+          : "Share your booking link or add one manually",
       external: true,
     },
   ];

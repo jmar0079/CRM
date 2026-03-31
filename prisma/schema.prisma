@@ -28,6 +28,11 @@ model Organization {
   currency        String   @default("USD")
   stripeAccountId    String?
   twilioPhoneNumber  String?
+  paypalUsername     String?
+  cashAppTag         String?
+  bookingMode        String   @default("BUILT_IN")
+  customBookingUrl   String?
+  bookingFormType    String   @default("SERVICE")
   createdAt          DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -628,9 +633,11 @@ model Payment {
   amount          Float
   method          PaymentMethod @default(CARD)
   status          PaymentStatus @default(PENDING)
-  stripePaymentId String?
-  stripeRefundId  String?
-  notes           String?
+  stripePaymentId  String?
+  stripeRefundId   String?
+  paypalOrderId    String?
+  cashAppPaymentId String?
+  notes            String?
   paidAt          DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -648,6 +655,9 @@ enum PaymentMethod {
   CASH
   CHECK
   BANK_TRANSFER
+  PAYPAL
+  CASH_APP
+  STRIPE
   OTHER
 }
 

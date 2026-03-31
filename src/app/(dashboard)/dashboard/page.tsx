@@ -106,7 +106,7 @@ export default async function DashboardPage() {
 
   // Onboarding data
   const [org, serviceCount, leadCount, customerCount] = await Promise.all([
-    db.organization.findUnique({ where: { id: session!.user.orgId }, select: { phone: true, slug: true, address: true } }),
+    db.organization.findUnique({ where: { id: session!.user.orgId }, select: { phone: true, slug: true, address: true, bookingMode: true, customBookingUrl: true, bookingFormType: true } }),
     db.service.count({ where: { orgId: session!.user.orgId } }),
     db.lead.count({ where: { orgId: session!.user.orgId } }),
     db.customer.count({ where: { orgId: session!.user.orgId } }),
@@ -174,6 +174,10 @@ export default async function DashboardPage() {
         hasService={hasService}
         hasLead={hasLead}
         orgSlug={org?.slug ?? ""}
+        bookingMode={org?.bookingMode ?? "BUILT_IN"}
+        customBookingUrl={org?.customBookingUrl}
+        bookingFormType={org?.bookingFormType ?? "SERVICE"}
+        appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ""}
       />
 
       {/* Alert banners */}

@@ -16,6 +16,7 @@ import {
   Clock,
 } from "lucide-react";
 import { formatDate, formatCurrency, timeAgo, LEAD_SOURCE_LABELS } from "@/lib/utils";
+import { BookingLinkCard } from "./BookingLinkCard";
 
 export async function generateMetadata({
   params,
@@ -36,21 +37,27 @@ export default async function LeadDetailPage({
   const session = await auth();
   const orgId = session!.user.orgId;
 
-  const lead = await db.lead.findUnique({
-    where: { id, orgId },
-    include: {
-      stage: true,
-      tags: { include: { tag: true } },
-      activities: { orderBy: { createdAt: "desc" }, take: 20 },
-      tasks: { where: { status: "PENDING" }, orderBy: { dueAt: "asc" } },
-      quotes: { orderBy: { createdAt: "desc" }, take: 5 },
-      messageThreads: {
-        include: { messages: { orderBy: { createdAt: "desc" }, take: 1 } },
-        orderBy: { lastMessageAt: "desc" },
-        take: 3,
+  const [lead, org] = await Promise.all([
+    db.lead.findUnique({
+      where: { id, orgId },
+      include: {
+        stage: true,
+        tags: { include: { tag: true } },
+        activities: { orderBy: { createdAt: "desc" }, take: 20 },
+        tasks: { where: { status: "PENDING" }, orderBy: { dueAt: "asc" } },
+        quotes: { orderBy: { createdAt: "desc" }, take: 5 },
+        messageThreads: {
+          include: { messages: { orderBy: { createdAt: "desc" }, take: 1 } },
+          orderBy: { lastMessageAt: "desc" },
+          take: 3,
+        },
       },
-    },
-  });
+    }),
+    db.organization.findUnique({
+      where: { id: orgId },
+      select: { slug: true, bookingMode: true, customBookingUrl: true, bookingFormType: true },
+    }),
+  ]);
 
   if (!lead) notFound();
 
@@ -184,6 +191,16 @@ export default async function LeadDetailPage({
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {org && !lead.convertedToId && (
+            <BookingLinkCard
+              bookingMode={org.bookingMode}
+              customBookingUrl={org.customBookingUrl}
+              orgSlug={org.slug}
+              appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ""}
+              bookingFormType={org.bookingFormType}
+            />
           )}
         </div>
 
