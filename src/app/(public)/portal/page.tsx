@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from "@/lib/utils";
 import { ReviewForm } from "./ReviewForm";
+import { getPayPalClientId } from "@/lib/paypal";
+import { PayNowButton } from "@/components/PayNowButton";
 
 export const metadata: Metadata = { title: "Customer Portal" };
 
@@ -44,6 +46,9 @@ export default async function PortalPage({
 
   if (!customer) notFound();
 
+  // Fetch the org's PayPal client ID (safe to expose to frontend)
+  const paypalClientId = await getPayPalClientId(customer.orgId);
+
   const pendingInvoices = customer.invoices.filter((inv) =>
     ["SENT", "OVERDUE"].includes(inv.status)
   );
@@ -78,34 +83,34 @@ export default async function PortalPage({
             {customer.invoices.length === 0 ? (
               <p className="text-sm text-slate-400">No invoices yet.</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-4">
                 {customer.invoices.map((inv) => (
                   <li
                     key={inv.id}
-                    className="flex items-center justify-between rounded-lg border border-slate-100 px-4 py-3"
+                    className="rounded-lg border border-slate-100 px-4 py-3 space-y-3"
                   >
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">{inv.invoiceNumber}</p>
-                      <p className="text-xs text-slate-500">Due {formatDate(inv.dueAt ?? inv.createdAt)}</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{inv.invoiceNumber}</p>
+                        <p className="text-xs text-slate-500">Due {formatDate(inv.dueAt ?? inv.createdAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge className={INVOICE_STATUS_COLORS[inv.status as keyof typeof INVOICE_STATUS_COLORS] ?? ""}>
+                          {INVOICE_STATUS_LABELS[inv.status as keyof typeof INVOICE_STATUS_LABELS] ?? inv.status}
+                        </Badge>
+                        <span className="font-medium text-slate-900">
+                          {formatCurrency(inv.total)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Badge className={INVOICE_STATUS_COLORS[inv.status as keyof typeof INVOICE_STATUS_COLORS] ?? ""}>
-                        {INVOICE_STATUS_LABELS[inv.status as keyof typeof INVOICE_STATUS_LABELS] ?? inv.status}
-                      </Badge>
-                      <span className="font-medium text-slate-900">
-                        {formatCurrency(inv.total)}
-                      </span>
-                      {inv.paymentLink && ["SENT", "OVERDUE"].includes(inv.status) && (
-                        <a
-                          href={inv.paymentLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-                        >
-                          Pay Now
-                        </a>
-                      )}
-                    </div>
+                    {/* PayPal Pay Now button for unpaid invoices */}
+                    {paypalClientId && ["SENT", "OVERDUE"].includes(inv.status) && inv.amountDue > 0 && (
+                      <PayNowButton
+                        invoiceId={inv.id}
+                        amountDue={inv.amountDue}
+                        paypalClientId={paypalClientId}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>

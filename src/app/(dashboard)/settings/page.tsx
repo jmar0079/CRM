@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Layers, Users, Wrench, Bell } from "lucide-react";
+import { Building2, Layers, Users, Wrench, Bell, CreditCard } from "lucide-react";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -38,6 +38,12 @@ const settingsSections = [
     icon: Bell,
     title: "Notifications",
     description: "Configure email and SMS notification triggers.",
+  },
+  {
+    href: "/settings/paypal",
+    icon: CreditCard,
+    title: "PayPal Payments",
+    description: "Connect PayPal so customers can pay invoices online.",
   },
 ];
 

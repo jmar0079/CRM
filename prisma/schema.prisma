@@ -33,6 +33,12 @@ model Organization {
   bookingMode        String   @default("BUILT_IN")
   customBookingUrl   String?
   bookingFormType    String   @default("SERVICE")
+  // PayPal per-org credentials (secret AES-encrypted, pin bcrypt-hashed)
+  paypalClientId     String?
+  paypalClientSecret String?
+  paypalMode         String   @default("SANDBOX")
+  paypalPin          String?
+  paypalEnabled      Boolean  @default(false)
   createdAt          DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
