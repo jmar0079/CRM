@@ -39,7 +39,7 @@ export default async function InvoiceDetailPage({
   const invoice = await db.invoice.findFirst({
     where: { id, orgId },
     include: {
-      customer: true,
+      customer: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, address: true, portalToken: true } },
       items: { orderBy: { position: "asc" } },
       payments: { orderBy: { createdAt: "desc" } },
       quote: { select: { id: true, quoteNumber: true } },
@@ -78,7 +78,7 @@ export default async function InvoiceDetailPage({
           </div>
         </div>
 
-        <InvoiceActions invoice={{ id: invoice.id, status: invoice.status }} />
+        <InvoiceActions invoice={{ id: invoice.id, status: invoice.status }} portalToken={invoice.customer.portalToken ?? null} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
