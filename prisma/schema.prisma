@@ -175,6 +175,7 @@ model Lead {
   isArchived      Boolean     @default(false)
   lostReason      LostReason?
   lostNote        String?
+  preferredDate   DateTime?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -524,6 +525,7 @@ model Quote {
   taxAmt        Float       @default(0)
   total         Float       @default(0)
   notes         String?
+  serviceDate   DateTime?
   validUntil    DateTime?
   approvalToken String?     @unique
   approvedAt    DateTime?

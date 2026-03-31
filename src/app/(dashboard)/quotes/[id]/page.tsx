@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { formatCurrency, formatDate, QUOTE_STATUS_LABELS } from "@/lib/utils";
 import { QuoteActions } from "./QuoteActions";
+import { ServiceDateEditor } from "./ServiceDateEditor";
 
 type QuoteStatus = "DRAFT" | "SENT" | "APPROVED" | "DECLINED" | "EXPIRED" | "CONVERTED";
 
@@ -131,6 +132,13 @@ export default async function QuoteDetailPage({
               <CardTitle className="text-sm">Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between items-center text-slate-600">
+                <span>Service Date</span>
+                <ServiceDateEditor
+                  quoteId={quote.id}
+                  serviceDate={quote.serviceDate ? quote.serviceDate.toISOString() : null}
+                />
+              </div>
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal</span>
                 <span>{formatCurrency(quote.subtotal)}</span>

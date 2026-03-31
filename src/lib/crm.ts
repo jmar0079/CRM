@@ -200,7 +200,8 @@ export async function createDraftQuote(
   orgId: string,
   leadId: string,
   notes?: string | null,
-  serviceId?: string | null
+  serviceId?: string | null,
+  serviceDate?: string | null
 ) {
   const quoteNumber = await generateQuoteNumber(orgId);
   const approvalToken = generateToken();
@@ -223,6 +224,7 @@ export async function createDraftQuote(
       quoteNumber,
       approvalToken,
       ...(notes ? { notes } : {}),
+      ...(serviceDate ? { serviceDate: new Date(serviceDate) } : {}),
       ...(service
         ? {
             subtotal: serviceTotal,
