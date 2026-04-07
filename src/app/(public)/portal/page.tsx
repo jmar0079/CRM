@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from "@/lib/utils";
 import { ReviewForm } from "./ReviewForm";
+import { MessageForm } from "./MessageForm";
 import { getPayPalClientId } from "@/lib/paypal";
 import { PayNowButton } from "@/components/PayNowButton";
 
@@ -150,6 +151,16 @@ export default async function PortalPage({
                 ))}
               </ul>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Messages */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Messages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MessageForm customerId={customer.id} orgId={customer.orgId} />
           </CardContent>
         </Card>
 
