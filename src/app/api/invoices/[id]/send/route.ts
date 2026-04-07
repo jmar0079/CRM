@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { generateCustomerPortalToken } from "@/lib/crm";
 import { NextResponse } from "next/server";
 import { sendEmail, buildInvoiceEmailHtml } from "@/lib/email";
 
@@ -15,7 +16,7 @@ export async function POST(
     const invoice = await db.invoice.findFirst({
       where: { id, orgId: session.user.orgId },
       include: {
-        customer: { select: { firstName: true, lastName: true, email: true, portalToken: true } },
+        customer: { select: { id: true, firstName: true, lastName: true, email: true, portalToken: true } },
         organization: { select: { name: true } },
       },
     });
@@ -25,11 +26,12 @@ export async function POST(
     if (!invoice.customer.email) {
       return NextResponse.json({ error: "Customer has no email address" }, { status: 400 });
     }
-    if (!invoice.customer.portalToken) {
-      return NextResponse.json({ error: "Customer has no portal access token" }, { status: 400 });
+    let portalToken = invoice.customer.portalToken;
+    if (!portalToken) {
+      portalToken = await generateCustomerPortalToken(invoice.customer.id);
     }
 
-    const paymentUrl = `${process.env.NEXTAUTH_URL}/portal?token=${invoice.customer.portalToken}`;
+    const paymentUrl = `${process.env.NEXTAUTH_URL}/portal?token=${portalToken}`;
     const customerName = `${invoice.customer.firstName} ${invoice.customer.lastName}`;
 
     const html = buildInvoiceEmailHtml({
