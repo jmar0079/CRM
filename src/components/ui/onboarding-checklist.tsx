@@ -17,8 +17,10 @@ interface OnboardingChecklist {
 
 export function OnboardingChecklist({ hasOrg, hasService, hasLead, orgSlug, bookingMode, bookingFormType, customBookingUrl, appUrl = "" }: OnboardingChecklist) {
   const [dismissed, setDismissed] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (localStorage.getItem("onboarding-dismissed") === "true") {
       setDismissed(true);
     }
@@ -27,7 +29,8 @@ export function OnboardingChecklist({ hasOrg, hasService, hasLead, orgSlug, book
   const allDone = hasOrg && hasService && hasLead;
 
   // Don't show if dismissed or everything is already done
-  if (dismissed || allDone) return null;
+  // On first render (before hydration), don't show to prevent hydration mismatch
+  if (!mounted || dismissed || allDone) return null;
 
   const steps = [
     {
@@ -68,8 +71,9 @@ export function OnboardingChecklist({ hasOrg, hasService, hasLead, orgSlug, book
     <div className="rounded-xl border border-blue-200 bg-blue-50 p-5 relative">
       <button
         onClick={dismiss}
-        className="absolute top-3 right-3 rounded p-1 text-blue-400 hover:text-blue-700 hover:bg-blue-100"
-        title="Dismiss"
+        className="absolute top-3 right-3 rounded p-1 text-blue-400 hover:text-blue-700 hover:bg-blue-100 transition-colors"
+        title="Skip onboarding – you can redo it later in settings"
+        aria-label="Skip onboarding"
       >
         <X className="h-4 w-4" />
       </button>
