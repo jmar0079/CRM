@@ -91,8 +91,8 @@ export function AppTour() {
   }, []);
 
   function handleCallback(data: EventData) {
-    const { status } = data;
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+    const { status, action } = data;
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED || action === 'close') {
       localStorage.setItem("tour-completed", "true");
       setRun(false);
     }
