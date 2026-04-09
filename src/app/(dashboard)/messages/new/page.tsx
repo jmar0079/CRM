@@ -197,6 +197,25 @@ export default function NewMessagePage() {
           />
         </div>
 
+        {selectedRecipient && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-800 font-medium">
+              Sending to: {selectedRecipient.firstName} {selectedRecipient.lastName}
+            </p>
+            {formData.channel === "SMS" && selectedRecipient.phone && (
+              <p className="text-blue-700 text-sm">Phone: {selectedRecipient.phone}</p>
+            )}
+            {formData.channel === "EMAIL" && selectedRecipient.email && (
+              <p className="text-blue-700 text-sm">Email: {selectedRecipient.email}</p>
+            )}
+            {!hasContactInfo && (
+              <p className="text-yellow-700 text-sm mt-1">
+                No {formData.channel === "SMS" ? "phone number" : "email address"} on file.
+              </p>
+            )}
+          </div>
+        )}
+
         {selectedRecipient && !hasContactInfo && (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-yellow-800">
