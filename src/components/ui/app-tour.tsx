@@ -79,21 +79,22 @@ const steps: Step[] = [
   },
 ];
 
-export function AppTour() {
+export function AppTour({ orgId }: { orgId: string }) {
   const [run, setRun] = useState(false);
+  const storageKey = `tour-completed:${orgId}`;
 
   useEffect(() => {
-    const seen = localStorage.getItem("tour-completed");
+    const seen = localStorage.getItem(storageKey);
     if (!seen) {
       // slight delay so sidebar renders first
       setTimeout(() => setRun(true), 800);
     }
-  }, []);
+  }, [storageKey]);
 
   function handleCallback(data: EventData) {
-    const { status } = data;
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      localStorage.setItem("tour-completed", "true");
+    const { status, action } = data;
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED || action === "close") {
+      localStorage.setItem(storageKey, "true");
       setRun(false);
     }
   }
@@ -103,7 +104,7 @@ export function AppTour() {
       steps={steps}
       run={run}
       continuous
-      onEvent={handleCallback}
+      callback={handleCallback}
       options={{
         primaryColor: "#2563eb",
         zIndex: 10000,
