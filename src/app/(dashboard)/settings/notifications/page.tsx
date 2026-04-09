@@ -13,31 +13,23 @@ interface NotifToggle {
 
 const EMAIL_NOTIFS: NotifToggle[] = [
   { key: "email_new_lead", label: "New lead captured", description: "Receive an email when a new lead is created via the public form or manually." },
-  { key: "email_lead_converted", label: "Lead converted", description: "Get notified when a lead is converted to a customer." },
-  { key: "email_job_scheduled", label: "Job scheduled", description: "Notification when a new job is scheduled." },
-  { key: "email_job_completed", label: "Job completed", description: "Notification when a job status changes to Completed." },
-  { key: "email_invoice_paid", label: "Invoice paid", description: "Alert when a customer pays an invoice." },
-  { key: "email_invoice_overdue", label: "Invoice overdue", description: "Daily digest of overdue invoices." },
-  { key: "email_quote_approved", label: "Quote approved", description: "Notification when a customer approves a quote." },
+  { key: "email_message_received", label: "Return message from customer or lead", description: "Get notified when a customer or lead sends a message." },
+  { key: "email_new_task", label: "New task", description: "Notification when a new task is created." },
 ];
 
 const SMS_NOTIFS: NotifToggle[] = [
   { key: "sms_new_lead", label: "New lead captured", description: "Receive an SMS for every new inbound lead." },
-  { key: "sms_job_reminder", label: "Job day-before reminder", description: "Send yourself a reminder SMS the day before a scheduled job." },
-  { key: "sms_invoice_paid", label: "Invoice paid", description: "SMS alert when a payment is received." },
+  { key: "sms_message_received", label: "Return message from customer or lead", description: "SMS alert when a customer or lead sends a message." },
+  { key: "sms_new_task", label: "New task", description: "SMS notification for new tasks." },
 ];
 
 const DEFAULT_STATE: Record<string, boolean> = {
   email_new_lead: true,
-  email_lead_converted: true,
-  email_job_scheduled: true,
-  email_job_completed: true,
-  email_invoice_paid: true,
-  email_invoice_overdue: true,
-  email_quote_approved: true,
+  email_message_received: true,
+  email_new_task: true,
   sms_new_lead: false,
-  sms_job_reminder: false,
-  sms_invoice_paid: false,
+  sms_message_received: false,
+  sms_new_task: false,
 };
 
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
