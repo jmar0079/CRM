@@ -82,6 +82,26 @@ export async function POST(req: Request) {
     await logActivity({ orgId, userId: session.user.id, type: "LEAD_CREATED", description: `Lead ${lead.firstName} ${lead.lastName} created`, leadId: lead.id });
     await createDraftQuote(orgId, lead.id);
 
+    // Create task to contact lead by end of the week
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday
+    const daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek;
+    const endOfWeek = new Date(now);
+    endOfWeek.setDate(now.getDate() + daysUntilSunday);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    await db.task.create({
+      data: {
+        orgId,
+        title: `Contact lead: ${lead.firstName} ${lead.lastName}`,
+        description: `Follow up with the new lead.`,
+        dueAt: endOfWeek,
+        assignedToId: session.user.id,
+        leadId: lead.id,
+        isAutomatic: true,
+      },
+    });
+
     return NextResponse.json({ lead }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/leads]", err);

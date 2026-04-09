@@ -153,6 +153,19 @@ export async function convertLeadToCustomer(leadId: string, orgId: string) {
     customerId: customer.id,
   });
 
+  // Apply preferred date to calendar
+  if (lead.preferredDate) {
+    await db.job.create({
+      data: {
+        orgId,
+        customerId: customer.id,
+        title: `Scheduled service for ${lead.serviceInterest || 'customer'}`,
+        scheduledAt: lead.preferredDate,
+        status: "SCHEDULED",
+      },
+    });
+  }
+
   return customer;
 }
 
