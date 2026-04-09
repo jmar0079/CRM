@@ -104,7 +104,7 @@ export function AppTour({ orgId }: { orgId: string }) {
       steps={steps}
       run={run}
       continuous
-      callback={handleCallback}
+      onEvent={handleCallback}
       options={{
         primaryColor: "#2563eb",
         zIndex: 10000,
