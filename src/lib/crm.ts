@@ -155,12 +155,23 @@ export async function convertLeadToCustomer(leadId: string, orgId: string) {
 
   // Apply preferred date to calendar
   if (lead.preferredDate) {
+    let scheduledAt = new Date(lead.preferredDate);
+    if ((lead as any).preferredTime) {
+      const time = (lead as any).preferredTime;
+      if (time === "morning") {
+        scheduledAt.setHours(9, 0, 0, 0);
+      } else if (time === "afternoon") {
+        scheduledAt.setHours(12, 0, 0, 0);
+      } else if (time === "evening") {
+        scheduledAt.setHours(17, 0, 0, 0);
+      }
+    }
     await db.job.create({
       data: {
         orgId,
         customerId: customer.id,
         title: `Scheduled service for ${lead.serviceInterest || 'customer'}`,
-        scheduledAt: lead.preferredDate,
+        scheduledAt,
         status: "SCHEDULED",
       },
     });

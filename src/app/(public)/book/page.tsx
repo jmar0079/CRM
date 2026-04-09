@@ -67,6 +67,7 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
     serviceId: "",
     serviceInterest: "",
     preferredDate: "",
+    preferredTime: "",
     notes: "",
   });
 
@@ -208,6 +209,21 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
       <div className="space-y-1.5">
         <Label htmlFor="preferredDate">Preferred Date</Label>
         <Input id="preferredDate" type="date" value={form.preferredDate} onChange={update("preferredDate")} disabled={loading} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="preferredTime">Preferred Time of Day</Label>
+        <select
+          id="preferredTime"
+          value={form.preferredTime}
+          onChange={(e) => setForm((f) => ({ ...f, preferredTime: e.target.value }))}
+          disabled={loading}
+          className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
+        >
+          <option value="">Any time</option>
+          <option value="morning">Morning (9 AM - 12 PM)</option>
+          <option value="afternoon">Afternoon (12 PM - 5 PM)</option>
+          <option value="evening">Evening (5 PM - 8 PM)</option>
+        </select>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="notes">Additional Notes</Label>

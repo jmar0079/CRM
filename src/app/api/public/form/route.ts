@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, duplicate: true }, { status: 200 });
     }
 
-    const { orgSlug: _slug, preferredDate, serviceId, ...leadData } = parsed.data;
+    const { orgSlug: _slug, preferredDate, preferredTime, serviceId, ...leadData } = parsed.data;
 
     // For returning customers (dup.type === "customer"), create a new lead so the
     // request shows up in the CRM — just don't create a duplicate customer record.
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
         source: "WEBSITE",
         status: "NEW",
         ...(preferredDate ? { preferredDate: new Date(preferredDate) } : {}),
+        ...(preferredTime ? { preferredTime } : {}),
         // If they're already a customer, link the lead to their customer record
         ...(dup?.type === "customer" ? { convertedToId: dup.id } : {}),
       },
