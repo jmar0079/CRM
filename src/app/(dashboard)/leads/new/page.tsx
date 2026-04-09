@@ -18,7 +18,7 @@ export default function NewLeadPage() {
     lastName: "",
     email: "",
     phone: "",
-    source: "MANUAL_ENTRY",
+    source: "OTHER",
     estimatedValue: "",
     notes: "",
   });
@@ -98,13 +98,10 @@ export default function NewLeadPage() {
                   disabled={loading}
                   className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
-                  <option value="MANUAL_ENTRY">Manual Entry</option>
-                  <option value="WEBSITE_FORM">Website Form</option>
+                  <option value="WEBSITE">Website Form</option>
                   <option value="REFERRAL">Referral</option>
-                  <option value="GOOGLE_ADS">Google Ads</option>
-                  <option value="FACEBOOK_ADS">Facebook Ads</option>
-                  <option value="SOCIAL_MEDIA">Social Media</option>
-                  <option value="PHONE_CALL">Phone Call</option>
+                  <option value="GOOGLE">Google Ads</option>
+                  <option value="FACEBOOK">Facebook Ads</option>
                   <option value="WALK_IN">Walk-In</option>
                   <option value="OTHER">Other</option>
                 </select>
