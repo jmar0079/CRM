@@ -8,13 +8,19 @@ export async function GET(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const orgId = session.user.orgId;
 
-  const activities = await db.activity.findMany({
-    where: { orgId },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+  const [activities, currentUser] = await Promise.all([
+    db.activity.findMany({
+      where: { orgId },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: { notificationsLastViewedAt: true },
+    }),
+  ]);
 
-  const lastViewed = session.user.notificationsLastViewedAt ? new Date(session.user.notificationsLastViewedAt) : null;
+  const lastViewed = currentUser?.notificationsLastViewedAt ?? null;
 
   const payload = activities.map((a) => ({
     id: a.id,

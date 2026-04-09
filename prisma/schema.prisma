@@ -87,9 +87,10 @@ model User {
   phone         String?
   avatar        String?
   role          UserRole  @default(STAFF)
-  isActive      Boolean   @default(true)
-  lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
+  isActive                  Boolean   @default(true)
+  lastLoginAt               DateTime?
+  notificationsLastViewedAt DateTime?
+  createdAt                 DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   organization  Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
