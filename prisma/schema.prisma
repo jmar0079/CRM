@@ -56,6 +56,7 @@ model Organization {
   reviews         Review[]
   automationRules AutomationRule[]
   settings        OrgSettings?
+  inquiryMatches  ServiceInquiryMatch[]
 }
 
 model OrgSettings {
@@ -839,4 +840,63 @@ model FormSubmission {
   createdAt DateTime @default(now())
 
   @@index([orgId])
+}
+
+// ─────────────────────────────────────────────
+// SERVICE INQUIRIES (MARKETPLACE)
+// ─────────────────────────────────────────────
+
+model ServiceInquiry {
+  id            String            @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  serviceName   String
+  category      String?
+  description   String?
+  location      String? // City, State or ZIP
+  urgency       InquiryUrgency    @default(NORMAL)
+  status        InquiryStatus     @default(PENDING)
+  matchedOrgs   ServiceInquiryMatch[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([email])
+  @@index([phone])
+  @@index([category])
+  @@index([status])
+}
+
+model ServiceInquiryMatch {
+  id          String   @id @default(cuid())
+  inquiryId   String
+  orgId       String
+  matchScore  Float    @default(0) // 0-1 score based on relevance
+  contactedAt DateTime?
+  respondedAt DateTime?
+  leadId      String? // If converted to lead
+  createdAt   DateTime @default(now())
+
+  inquiry     ServiceInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([inquiryId, orgId])
+  @@index([inquiryId])
+  @@index([orgId])
+}
+
+enum InquiryUrgency {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum InquiryStatus {
+  PENDING
+  MATCHED
+  CONTACTED
+  CONVERTED
+  CLOSED
 }

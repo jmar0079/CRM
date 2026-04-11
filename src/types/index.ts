@@ -23,6 +23,8 @@ export type {
   Activity,
   AutomationRule,
   FormSubmission,
+  ServiceInquiry,
+  ServiceInquiryMatch,
   UserRole,
   LeadSource,
   LeadStatus,
