@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Users, Clock, MapPin, Star } from "lucide-react";
+import { Search, Users, Clock, MapPin, Star, Building2, TrendingUp, Shield } from "lucide-react";
 
 export default function PublicHomePage() {
   return (
@@ -22,6 +22,9 @@ export default function PublicHomePage() {
               </Link>
               <Link href="/book" className="text-gray-600 hover:text-gray-900 font-medium">
                 Book Appointment
+              </Link>
+              <Link href="/auth/register" className="text-green-600 hover:text-green-800 font-medium">
+                For Businesses
               </Link>
             </nav>
           </div>
@@ -165,6 +168,74 @@ export default function PublicHomePage() {
         </div>
       </section>
 
+      {/* For Organizations Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Grow Your Business with ServiceFinder
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Join our platform to connect with customers actively seeking your services.
+              Get new leads, manage your business, and grow your revenue.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <Card className="text-center">
+              <CardHeader>
+                <Building2 className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <CardTitle className="text-lg">Get New Customers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Customers searching for your services will be automatically matched and notified.
+                  No more waiting for leads to come to you.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center">
+              <CardHeader>
+                <TrendingUp className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <CardTitle className="text-lg">Increase Revenue</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Expand your customer base and fill your schedule with qualified leads
+                  that match your expertise and location.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center">
+              <CardHeader>
+                <Shield className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <CardTitle className="text-lg">Professional Tools</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Access powerful CRM tools, customer management, invoicing, and scheduling
+                  to run your business more efficiently.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center">
+            <Button asChild size="lg" className="text-lg px-8 py-3 bg-green-600 hover:bg-green-700">
+              <Link href="/auth/register">
+                <Building2 className="mr-2 h-5 w-5" />
+                Start Your Free Organization Account
+              </Link>
+            </Button>
+            <p className="mt-4 text-sm text-gray-600">
+              Join thousands of service providers already growing their business with ServiceFinder
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-blue-600">
         <div className="max-w-4xl mx-auto text-center">
@@ -205,6 +276,7 @@ export default function PublicHomePage() {
                 <li><Link href="/inquire" className="hover:text-white">Find Services</Link></li>
                 <li><Link href="/book" className="hover:text-white">Book Appointment</Link></li>
                 <li><Link href="/portal" className="hover:text-white">Customer Portal</Link></li>
+                <li><Link href="/auth/register" className="hover:text-green-400">For Businesses</Link></li>
               </ul>
             </div>
 
