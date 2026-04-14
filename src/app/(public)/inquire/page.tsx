@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CheckCircle, Search } from "lucide-react";
+import { Loader2, CheckCircle, Search, ArrowLeft } from "lucide-react";
 
 const SERVICE_CATEGORIES = [
   "Plumbing",
@@ -85,10 +86,15 @@ export default function InquirePage() {
             <div className="text-center">
               <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Inquiry Submitted!</h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-6">
                 We'll match your request with qualified service providers in your area.
                 You'll hear back from them soon.
               </p>
+              <Button asChild>
+                <Link href="/">
+                  Return to Home
+                </Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -97,7 +103,28 @@ export default function InquirePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Home
+              </Link>
+            </Button>
+            <div className="flex items-center">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+                <span className="text-sm font-bold text-white">S</span>
+              </div>
+              <span className="ml-2 font-semibold text-gray-900">ServiceFinder</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <Search className="mx-auto h-12 w-12 text-blue-500 mb-4" />

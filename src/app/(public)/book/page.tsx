@@ -264,6 +264,14 @@ function BookPageContent() {
         <Card>
           <CardContent className="pt-6">
             <BookingForm orgSlug={orgSlug} formType={formType} />
+            <div className="mt-6 border-t pt-4 text-center text-sm text-gray-500">
+              <p>
+                Don't have a specific provider in mind?{" "}
+                <a href="/inquire" className="text-blue-600 hover:text-blue-800 font-medium">
+                  Find services through our marketplace
+                </a>
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
