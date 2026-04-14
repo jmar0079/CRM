@@ -96,13 +96,18 @@ export function OrgSettingsForm({ org }: OrgFormProps) {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/settings">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Link href="/settings">
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold text-slate-900">Organization Settings</h1>
+        </div>
+        <Link href="/">
+          <Button variant="secondary" size="sm">Back to Home</Button>
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Organization Settings</h1>
       </div>
 
       <Card>
