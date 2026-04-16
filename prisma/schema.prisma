@@ -1,0 +1,902 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// AUTH & MULTI-TENANCY
+// ─────────────────────────────────────────────
+
+model Organization {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  logo            String?
+  primaryColor    String?  @default("#2563eb")
+  phone           String?
+  email           String?
+  website         String?
+  address         String?
+  timezone        String   @default("America/New_York")
+  currency        String   @default("USD")
+  stripeAccountId    String?
+  twilioPhoneNumber  String?
+  paypalUsername     String?
+  cashAppTag         String?
+  bookingMode        String   @default("BUILT_IN")
+  customBookingUrl   String?
+  bookingFormType    String   @default("SERVICE")
+  // PayPal per-org credentials (secret AES-encrypted, pin bcrypt-hashed)
+  paypalClientId     String?
+  paypalClientSecret String?
+  paypalMode         String   @default("SANDBOX")
+  paypalPin          String?
+  paypalEnabled      Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users           User[]
+  leads           Lead[]
+  customers       Customer[]
+  jobs            Job[]
+  tasks           Task[]
+  pipelineStages  PipelineStage[]
+  services        Service[]
+  messageThreads  MessageThread[]
+  quotes          Quote[]
+  invoices        Invoice[]
+  payments        Payment[]
+  reviews         Review[]
+  automationRules AutomationRule[]
+  settings        OrgSettings?
+  inquiryMatches  ServiceInquiryMatch[]
+}
+
+model OrgSettings {
+  id                  String       @id @default(cuid())
+  orgId               String       @unique
+  workingHoursStart   String       @default("09:00")
+  workingHoursEnd     String       @default("17:00")
+  workingDays         String         @default("[1,2,3,4,5]")
+  bufferMinutes       Int          @default(15)
+  cancellationPolicy  String?
+  depositRequired     Boolean      @default(false)
+  depositPercent      Int          @default(25)
+  reminderHoursBefore Int          @default(24)
+  autoReplyEnabled    Boolean      @default(true)
+  autoReplyMessage    String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  organization        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  orgId         String
+  name          String
+  email         String
+  emailVerified DateTime?
+  passwordHash  String?
+  phone         String?
+  avatar        String?
+  role          UserRole  @default(STAFF)
+  isActive                  Boolean   @default(true)
+  lastLoginAt               DateTime?
+  notificationsLastViewedAt DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  organization  Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  accounts      Account[]
+  sessions      Session[]
+  assignedJobs  Job[]           @relation("AssignedTo")
+  createdLeads  Lead[]          @relation("LeadCreatedBy")
+  tasks         Task[]          @relation("TaskAssignedTo")
+  sentMessages  Message[]
+
+  @@unique([email, orgId])
+  @@index([orgId])
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────
+// LEADS & CUSTOMERS
+// ─────────────────────────────────────────────
+
+model Lead {
+  id              String      @id @default(cuid())
+  orgId           String
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  source          LeadSource  @default(OTHER)
+  sourceDetail    String?
+  serviceInterest String?
+  notes           String?
+  address         String?
+  city            String?
+  state           String?
+  zip             String?
+  status          LeadStatus  @default(NEW)
+  stageId         String?
+  estimatedValue  Float?
+  assignedToId    String?
+  createdById     String?
+  convertedAt     DateTime?
+  convertedToId   String?
+  isArchived      Boolean     @default(false)
+  lostReason      LostReason?
+  lostNote        String?
+  preferredDate   DateTime?
+  preferredTime   String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  organization    Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  stage           PipelineStage?  @relation(fields: [stageId], references: [id])
+  createdBy       User?           @relation("LeadCreatedBy", fields: [createdById], references: [id])
+  convertedTo     Customer?       @relation("ConvertedFrom", fields: [convertedToId], references: [id])
+  tags            LeadTag[]
+  tasks           Task[]
+  messageThreads  MessageThread[]
+  activities      Activity[]
+  quotes          Quote[]
+
+  @@index([orgId])
+  @@index([phone])
+  @@index([email])
+  @@index([stageId])
+}
+
+enum LeadSource {
+  GOOGLE
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  REFERRAL
+  WEBSITE
+  WALK_IN
+  YELP
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUOTE_SENT
+  SCHEDULED
+  COMPLETED
+  LOST
+}
+
+enum LostReason {
+  PRICE
+  TIMING
+  COMPETITOR
+  NO_RESPONSE
+  OTHER
+}
+
+model Customer {
+  id           String    @id @default(cuid())
+  orgId        String
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  address      String?
+  city         String?
+  state        String?
+  zip          String?
+  notes        String?
+  isActive     Boolean   @default(true)
+  totalSpent   Float     @default(0)
+  jobCount     Int       @default(0)
+  lastJobDate  DateTime?
+  nextFollowUp DateTime?
+  portalToken  String?   @unique
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  organization    Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  leads           Lead[]          @relation("ConvertedFrom")
+  jobs            Job[]
+  vehicles        Vehicle[]
+  tags            CustomerTag[]
+  tasks           Task[]
+  messageThreads  MessageThread[]
+  quotes          Quote[]
+  invoices        Invoice[]
+  payments        Payment[]
+  reviews         Review[]
+  activities      Activity[]
+
+  @@index([orgId])
+  @@index([phone])
+  @@index([email])
+}
+
+model Vehicle {
+  id         String   @id @default(cuid())
+  customerId String
+  year       String?
+  make       String?
+  model      String?
+  color      String?
+  plate      String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  jobs       Job[]
+}
+
+// ─────────────────────────────────────────────
+// PIPELINE
+// ─────────────────────────────────────────────
+
+model PipelineStage {
+  id           String   @id @default(cuid())
+  orgId        String
+  name         String
+  color        String   @default("#6366f1")
+  position     Int
+  isDefault    Boolean  @default(false)
+  isFinal      Boolean  @default(false)
+  autoSendType String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  leads        Lead[]
+  jobs         Job[]
+
+  @@index([orgId, position])
+}
+
+// ─────────────────────────────────────────────
+// JOBS / APPOINTMENTS
+// ─────────────────────────────────────────────
+
+model Job {
+  id               String    @id @default(cuid())
+  orgId            String
+  customerId       String
+  vehicleId        String?
+  stageId          String?
+  assignedToId     String?
+  serviceId        String?
+  title            String
+  description      String?
+  address          String?
+  lat              Float?
+  lng              Float?
+  status           JobStatus @default(SCHEDULED)
+  scheduledAt      DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  canceledAt       DateTime?
+  estimatedMinutes Int?
+  price            Float?
+  notes            String?
+  photos           String    @default("[]")
+  isRecurring      Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  organization    Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  customer        Customer       @relation(fields: [customerId], references: [id])
+  vehicle         Vehicle?       @relation(fields: [vehicleId], references: [id])
+  stage           PipelineStage? @relation(fields: [stageId], references: [id])
+  assignedTo      User?          @relation("AssignedTo", fields: [assignedToId], references: [id])
+  service         Service?       @relation(fields: [serviceId], references: [id])
+  tasks           Task[]
+  messageThreads  MessageThread[]
+  quotes          Quote[]
+  invoices        Invoice[]
+  activities      Activity[]
+
+  @@index([orgId])
+  @@index([customerId])
+  @@index([scheduledAt])
+  @@index([assignedToId])
+}
+
+enum JobStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+  NO_SHOW
+}
+
+// ─────────────────────────────────────────────
+// SERVICES (catalog)
+// ─────────────────────────────────────────────
+
+model Service {
+  id              String   @id @default(cuid())
+  orgId           String
+  name            String
+  description     String?
+  price           Float?
+  durationMinutes Int?
+  category        String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  jobs         Job[]
+  quoteItems   QuoteItem[]
+  invoiceItems InvoiceItem[]
+
+  @@index([orgId])
+}
+
+// ─────────────────────────────────────────────
+// TASKS & REMINDERS
+// ─────────────────────────────────────────────
+
+model Task {
+  id           String       @id @default(cuid())
+  orgId        String
+  title        String
+  description  String?
+  dueAt        DateTime?
+  priority     TaskPriority @default(MEDIUM)
+  status       TaskStatus   @default(PENDING)
+  assignedToId String?
+  leadId       String?
+  customerId   String?
+  jobId        String?
+  isAutomatic  Boolean      @default(false)
+  completedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  assignedTo   User?        @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  lead         Lead?        @relation(fields: [leadId], references: [id])
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+  job          Job?         @relation(fields: [jobId], references: [id])
+
+  @@index([orgId])
+  @@index([assignedToId])
+  @@index([dueAt])
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
+
+// ─────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────
+
+model MessageThread {
+  id            String   @id @default(cuid())
+  orgId         String
+  leadId        String?
+  customerId    String?
+  jobId         String?
+  subject       String?
+  channel       Channel  @default(SMS)
+  isResolved    Boolean  @default(false)
+  lastMessageAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  lead         Lead?        @relation(fields: [leadId], references: [id])
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+  job          Job?         @relation(fields: [jobId], references: [id])
+  messages     Message[]
+
+  @@index([orgId])
+  @@index([customerId])
+  @@index([leadId])
+}
+
+model Message {
+  id         String        @id @default(cuid())
+  threadId   String
+  senderId   String?
+  direction  Direction     @default(OUTBOUND)
+  channel    Channel       @default(SMS)
+  body       String
+  externalId String?
+  status     MessageStatus @default(SENT)
+  readAt     DateTime?
+  createdAt  DateTime      @default(now())
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User?         @relation(fields: [senderId], references: [id])
+
+  @@index([threadId])
+}
+
+enum Channel {
+  SMS
+  EMAIL
+  WHATSAPP
+}
+
+enum Direction {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model MessageTemplate {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  channel   Channel  @default(SMS)
+  subject   String?
+  body      String
+  variables String   @default("[]")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId])
+}
+
+// ─────────────────────────────────────────────
+// QUOTES
+// ─────────────────────────────────────────────
+
+model Quote {
+  id            String      @id @default(cuid())
+  orgId         String
+  quoteNumber   String
+  leadId        String?
+  customerId    String?
+  jobId         String?
+  status        QuoteStatus @default(DRAFT)
+  subtotal      Float       @default(0)
+  discountAmt   Float       @default(0)
+  taxRate       Float       @default(0)
+  taxAmt        Float       @default(0)
+  total         Float       @default(0)
+  notes         String?
+  serviceDate   DateTime?
+  validUntil    DateTime?
+  approvalToken String?     @unique
+  approvedAt    DateTime?
+  declinedAt    DateTime?
+  declineNote   String?
+  sentAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  lead         Lead?        @relation(fields: [leadId], references: [id])
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+  job          Job?         @relation(fields: [jobId], references: [id])
+  items        QuoteItem[]
+  invoice      Invoice?
+
+  @@index([orgId])
+  @@index([approvalToken])
+}
+
+model QuoteItem {
+  id          String   @id @default(cuid())
+  quoteId     String
+  serviceId   String?
+  description String
+  qty         Float    @default(1)
+  unitPrice   Float
+  total       Float
+  position    Int      @default(0)
+
+  quote   Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  service Service? @relation(fields: [serviceId], references: [id])
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  DECLINED
+  EXPIRED
+  CONVERTED
+}
+
+// ─────────────────────────────────────────────
+// INVOICES
+// ─────────────────────────────────────────────
+
+model Invoice {
+  id              String        @id @default(cuid())
+  orgId           String
+  invoiceNumber   String
+  customerId      String
+  jobId           String?
+  quoteId         String?       @unique
+  status          InvoiceStatus @default(UNPAID)
+  subtotal        Float         @default(0)
+  discountAmt     Float         @default(0)
+  taxRate         Float         @default(0)
+  taxAmt          Float         @default(0)
+  total           Float         @default(0)
+  amountPaid      Float         @default(0)
+  amountDue       Float         @default(0)
+  notes           String?
+  dueAt           DateTime?
+  paidAt          DateTime?
+  sentAt          DateTime?
+  stripeInvoiceId String?
+  paymentLink     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  organization Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  job          Job?          @relation(fields: [jobId], references: [id])
+  quote        Quote?        @relation(fields: [quoteId], references: [id])
+  items        InvoiceItem[]
+  payments     Payment[]
+
+  @@index([orgId])
+  @@index([customerId])
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  serviceId   String?
+  description String
+  qty         Float    @default(1)
+  unitPrice   Float
+  total       Float
+  position    Int      @default(0)
+
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  service Service? @relation(fields: [serviceId], references: [id])
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  OVERDUE
+  VOID
+}
+
+// ─────────────────────────────────────────────
+// PAYMENTS
+// ─────────────────────────────────────────────
+
+model Payment {
+  id              String        @id @default(cuid())
+  orgId           String
+  customerId      String
+  invoiceId       String?
+  amount          Float
+  method          PaymentMethod @default(CARD)
+  status          PaymentStatus @default(PENDING)
+  stripePaymentId  String?
+  stripeRefundId   String?
+  paypalOrderId    String?
+  cashAppPaymentId String?
+  notes            String?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  customer     Customer     @relation(fields: [customerId], references: [id])
+  invoice      Invoice?     @relation(fields: [invoiceId], references: [id])
+
+  @@index([orgId])
+  @@index([customerId])
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+  CHECK
+  BANK_TRANSFER
+  PAYPAL
+  CASH_APP
+  STRIPE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+// ─────────────────────────────────────────────
+// REVIEWS
+// ─────────────────────────────────────────────
+
+model Review {
+  id             String   @id @default(cuid())
+  orgId          String
+  customerId     String
+  jobId          String?
+  rating         Int
+  comment        String?
+  reviewToken    String?  @unique
+  pushedToGoogle Boolean  @default(false)
+  pushedToYelp   Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  customer     Customer     @relation(fields: [customerId], references: [id])
+
+  @@index([orgId])
+}
+
+// ─────────────────────────────────────────────
+// TAGS
+// ─────────────────────────────────────────────
+
+model Tag {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  color     String   @default("#6366f1")
+  createdAt DateTime @default(now())
+
+  leadTags     LeadTag[]
+  customerTags CustomerTag[]
+
+  @@unique([orgId, name])
+}
+
+model LeadTag {
+  leadId String
+  tagId  String
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([leadId, tagId])
+}
+
+model CustomerTag {
+  customerId String
+  tagId      String
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, tagId])
+}
+
+// ─────────────────────────────────────────────
+// ACTIVITY LOG (timeline)
+// ─────────────────────────────────────────────
+
+model Activity {
+  id          String       @id @default(cuid())
+  orgId       String
+  type        ActivityType
+  description String
+  metadata    String?
+  leadId      String?
+  customerId  String?
+  jobId       String?
+  userId      String?
+  createdAt   DateTime     @default(now())
+
+  lead     Lead?     @relation(fields: [leadId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+  job      Job?      @relation(fields: [jobId], references: [id])
+
+  @@index([orgId])
+  @@index([leadId])
+  @@index([customerId])
+  @@index([jobId])
+}
+
+enum ActivityType {
+  LEAD_CREATED
+  LEAD_UPDATED
+  LEAD_STAGE_CHANGED
+  LEAD_CONVERTED
+  CUSTOMER_CREATED
+  CUSTOMER_UPDATED
+  JOB_CREATED
+  JOB_UPDATED
+  JOB_STATUS_CHANGED
+  JOB_SCHEDULED
+  JOB_COMPLETED
+  MESSAGE_SENT
+  MESSAGE_RECEIVED
+  QUOTE_CREATED
+  QUOTE_SENT
+  QUOTE_APPROVED
+  QUOTE_DECLINED
+  INVOICE_CREATED
+  INVOICE_SENT
+  PAYMENT_RECEIVED
+  TASK_CREATED
+  TASK_COMPLETED
+  REVIEW_RECEIVED
+  NOTE_ADDED
+}
+
+// ─────────────────────────────────────────────
+// AUTOMATION RULES
+// ─────────────────────────────────────────────
+
+model AutomationRule {
+  id           String            @id @default(cuid())
+  orgId        String
+  name         String
+  trigger      AutomationTrigger
+  conditions   String            @default("{}")
+  actions      String            @default("[]")
+  isActive     Boolean           @default(true)
+  runCount     Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+enum AutomationTrigger {
+  LEAD_CREATED
+  LEAD_STAGE_CHANGED
+  JOB_CREATED
+  JOB_COMPLETED
+  QUOTE_APPROVED
+  INVOICE_PAID
+  NO_REPLY_AFTER_QUOTE
+  DAYS_SINCE_LAST_JOB
+}
+
+// ─────────────────────────────────────────────
+// PUBLIC FORM SUBMISSIONS
+// ─────────────────────────────────────────────
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  orgId     String
+  data      String
+  ipAddress String?
+  userAgent String?
+  processed Boolean  @default(false)
+  leadId    String?
+  createdAt DateTime @default(now())
+
+  @@index([orgId])
+}
+
+// ─────────────────────────────────────────────
+// SERVICE INQUIRIES (MARKETPLACE)
+// ─────────────────────────────────────────────
+
+model ServiceInquiry {
+  id            String            @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  serviceName   String
+  category      String?
+  description   String?
+  location      String? // City, State or ZIP
+  urgency       InquiryUrgency    @default(NORMAL)
+  status        InquiryStatus     @default(PENDING)
+  matchedOrgs   ServiceInquiryMatch[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([email])
+  @@index([phone])
+  @@index([category])
+  @@index([status])
+}
+
+model ServiceInquiryMatch {
+  id          String   @id @default(cuid())
+  inquiryId   String
+  orgId       String
+  matchScore  Float    @default(0) // 0-1 score based on relevance
+  contactedAt DateTime?
+  respondedAt DateTime?
+  leadId      String? // If converted to lead
+  createdAt   DateTime @default(now())
+
+  inquiry     ServiceInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([inquiryId, orgId])
+  @@index([inquiryId])
+  @@index([orgId])
+}
+
+enum InquiryUrgency {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum InquiryStatus {
+  PENDING
+  MATCHED
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
