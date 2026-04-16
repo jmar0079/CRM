@@ -13,11 +13,16 @@ export async function GET(req: Request) {
 
   const org = await db.organization.findUnique({
     where: { slug: orgSlug },
-    select: { id: true },
+    select: { id: true, bookingMode: true, customBookingUrl: true },
   });
 
   if (!org) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+  }
+
+  // If org redirects to their own website, return that so the client can redirect
+  if (org.bookingMode === "CUSTOM_WEBSITE" && org.customBookingUrl) {
+    return NextResponse.json({ redirect: org.customBookingUrl });
   }
 
   const services = await db.service.findMany({

@@ -281,6 +281,29 @@ function BookPageContent() {
   const rawType = (searchParams.get("type") ?? "SERVICE").toUpperCase();
   const formType: FormType = rawType === "PRODUCT" ? "PRODUCT" : "SERVICE";
   const cfg = CONFIG[formType];
+  const [redirecting, setRedirecting] = useState(false);
+
+  // Check if the org uses a custom website — if so, redirect immediately
+  useEffect(() => {
+    if (!orgSlug) return;
+    fetch(`/api/public/services?orgSlug=${encodeURIComponent(orgSlug)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.redirect) {
+          setRedirecting(true);
+          window.location.href = d.redirect;
+        }
+      })
+      .catch(() => {});
+  }, [orgSlug]);
+
+  if (redirecting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
