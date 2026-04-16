@@ -33,6 +33,7 @@ model Organization {
   bookingMode        String   @default("BUILT_IN")
   customBookingUrl   String?
   bookingFormType    String   @default("SERVICE")
+  categories         String   @default("[]")
   // PayPal per-org credentials (secret AES-encrypted, pin bcrypt-hashed)
   paypalClientId     String?
   paypalClientSecret String?
@@ -373,6 +374,7 @@ model Service {
   durationMinutes Int?
   category        String?
   isActive        Boolean  @default(true)
+  hasColorOption  Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

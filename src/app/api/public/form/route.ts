@@ -34,7 +34,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, duplicate: true }, { status: 200 });
     }
 
-    const { orgSlug: _slug, preferredDate, preferredTime, serviceId, ...leadData } = parsed.data;
+    const { orgSlug: _slug, preferredDate, preferredTime, serviceId, colorChoice, ...leadData } = parsed.data;
+
+    // Append color choice to notes if provided
+    if (colorChoice && colorChoice.trim()) {
+      leadData.notes = leadData.notes
+        ? `${leadData.notes}\nColor choice: ${colorChoice}`
+        : `Color choice: ${colorChoice}`;
+    }
 
     // For returning customers (dup.type === "customer"), create a new lead so the
     // request shows up in the CRM — just don't create a duplicate customer record.

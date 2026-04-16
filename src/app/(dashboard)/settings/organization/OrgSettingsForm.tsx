@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2, Globe, LayoutList, Wrench, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Loader2, Globe, LayoutList, Wrench, ShoppingBag, Check } from "lucide-react";
 import Link from "next/link";
+
+const BUSINESS_CATEGORIES = [
+  "Plumbing", "Electrical", "HVAC", "Roofing", "Painting", "Cleaning",
+  "Landscaping", "Carpentry", "Automotive", "Home Repair", "Appliance Repair",
+  "Pest Control", "Other",
+];
 
 interface OrgFormProps {
   org: {
@@ -22,6 +28,7 @@ interface OrgFormProps {
     bookingMode: string;
     customBookingUrl: string | null;
     bookingFormType: string;
+    categories: string[];
   };
 }
 
@@ -41,7 +48,17 @@ export function OrgSettingsForm({ org }: OrgFormProps) {
     bookingMode: org.bookingMode ?? "BUILT_IN",
     customBookingUrl: org.customBookingUrl ?? "",
     bookingFormType: org.bookingFormType ?? "SERVICE",
+    categories: org.categories ?? [] as string[],
   });
+
+  function toggleCategory(cat: string) {
+    setForm((f) => ({
+      ...f,
+      categories: f.categories.includes(cat)
+        ? f.categories.filter((c) => c !== cat)
+        : [...f.categories, cat],
+    }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -173,6 +190,38 @@ export function OrgSettingsForm({ org }: OrgFormProps) {
                 />
               </div>
             </div>
+
+            {/* Business Categories */}
+            <div className="space-y-2">
+              <Label>Business Categories</Label>
+              <p className="text-xs text-slate-500">
+                Select all categories that describe your business. Customers can filter by these when searching.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {BUSINESS_CATEGORIES.map((cat) => {
+                  const selected = form.categories.includes(cat);
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleCategory(cat)}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
+                        selected
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      {selected && <Check className="h-3 w-3" />}
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+              {form.categories.length === 0 && (
+                <p className="text-xs text-amber-600">No categories selected — your business won&apos;t appear in category searches.</p>
+              )}
+            </div>
+
             {error && <p className="text-sm text-red-600">{error}</p>}
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

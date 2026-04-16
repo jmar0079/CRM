@@ -22,7 +22,7 @@ export async function GET(req: Request) {
 
   const services = await db.service.findMany({
     where: { orgId: org.id, isActive: true },
-    select: { id: true, name: true, description: true, price: true, category: true },
+    select: { id: true, name: true, description: true, price: true, category: true, hasColorOption: true },
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 

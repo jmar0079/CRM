@@ -18,12 +18,13 @@ export async function PATCH(
     if (!existing) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
     const body = await req.json();
-    const { name, description, price, durationMinutes, category } = body as {
+    const { name, description, price, durationMinutes, category, hasColorOption } = body as {
       name?: string;
       description?: string;
       price?: number | null;
       durationMinutes?: number | null;
       category?: string;
+      hasColorOption?: boolean;
     };
 
     const service = await db.service.update({
@@ -36,6 +37,7 @@ export async function PATCH(
           durationMinutes: durationMinutes != null ? Number(durationMinutes) : null,
         }),
         ...(category !== undefined && { category: category?.trim() || null }),
+        ...(hasColorOption !== undefined && { hasColorOption }),
       },
     });
 

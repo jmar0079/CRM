@@ -159,6 +159,7 @@ export const publicLeadFormSchema = z.object({
   preferredDate: z.string().optional(),
   preferredTime: z.string().optional(),
   notes: z.string().optional(),
+  colorChoice: z.string().optional(),
   orgSlug: z.string().min(1),
 });
 

@@ -20,12 +20,13 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { name, description, price, durationMinutes, category } = body as {
+    const { name, description, price, durationMinutes, category, hasColorOption } = body as {
       name: string;
       description?: string;
       price?: number;
       durationMinutes?: number;
       category?: string;
+      hasColorOption?: boolean;
     };
 
     if (!name?.trim()) {
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
         price: price != null ? Number(price) : null,
         durationMinutes: durationMinutes ? Number(durationMinutes) : null,
         category: category?.trim() || null,
+        hasColorOption: hasColorOption ?? false,
         orgId: session.user.orgId,
       },
     });

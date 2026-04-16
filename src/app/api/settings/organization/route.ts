@@ -2,6 +2,12 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
+const ALLOWED_CATEGORIES = [
+  "Plumbing", "Electrical", "HVAC", "Roofing", "Painting", "Cleaning",
+  "Landscaping", "Carpentry", "Automotive", "Home Repair", "Appliance Repair",
+  "Pest Control", "Other",
+];
+
 export async function PATCH(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -37,9 +43,26 @@ export async function PATCH(req: Request) {
       }
     }
 
+    // Validate categories
+    let categoriesJson: string | undefined;
+    if (body.categories !== undefined) {
+      if (!Array.isArray(body.categories)) {
+        return NextResponse.json({ error: "categories must be an array." }, { status: 400 });
+      }
+      const invalid = (body.categories as string[]).filter((c) => !ALLOWED_CATEGORIES.includes(c));
+      if (invalid.length > 0) {
+        return NextResponse.json({ error: `Invalid categories: ${invalid.join(", ")}` }, { status: 400 });
+      }
+      categoriesJson = JSON.stringify(body.categories);
+    }
+
     const updated = await db.organization.update({
       where: { id: session.user.orgId },
-      data: { name, phone, email, address, website, timezone, bookingMode, customBookingUrl, bookingFormType },
+      data: {
+        name, phone, email, address, website, timezone,
+        bookingMode, customBookingUrl, bookingFormType,
+        ...(categoriesJson !== undefined ? { categories: categoriesJson } : {}),
+      },
     });
     return NextResponse.json({ org: updated });
   } catch (err) {

@@ -38,6 +38,7 @@ interface CatalogService {
   name: string;
   price: number | null;
   category: string | null;
+  hasColorOption: boolean;
 }
 
 interface BookingFormProps {
@@ -52,6 +53,7 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [services, setServices] = useState<CatalogService[]>([]);
+  const [selectedServiceHasColor, setSelectedServiceHasColor] = useState(false);
   // "catalog" = user chose a catalog service; "custom" = user chose Custom/Other or no services
   const [servicePickMode, setServicePickMode] = useState<"catalog" | "custom">("catalog");
 
@@ -69,6 +71,7 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
     preferredDate: "",
     preferredTime: "",
     notes: "",
+    colorChoice: "",
   });
 
   // Fetch catalog services for SERVICE mode
@@ -91,9 +94,13 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
     const val = e.target.value;
     if (val === "custom" || val === "") {
       setServicePickMode("custom");
-      setForm((f) => ({ ...f, serviceId: "", serviceInterest: "" }));
+      setSelectedServiceHasColor(false);
+      setForm((f) => ({ ...f, serviceId: "", serviceInterest: "", colorChoice: "" }));
     } else {
       setServicePickMode("catalog");
+      const svc = services.find((s) => s.id === val);
+      setSelectedServiceHasColor(svc?.hasColorOption ?? false);
+      if (!(svc?.hasColorOption)) setForm((f) => ({ ...f, colorChoice: "" }));
       setForm((f) => ({ ...f, serviceId: val, serviceInterest: "" }));
     }
   }
@@ -205,6 +212,27 @@ function BookingForm({ orgSlug, formType }: BookingFormProps) {
           />
         )}
       </div>
+
+      {/* Color picker — only shown when the selected catalog service has hasColorOption=true */}
+      {selectedServiceHasColor && (
+        <div className="space-y-1.5">
+          <Label htmlFor="colorChoice">Color</Label>
+          <div className="flex items-center gap-3">
+            <input
+              id="colorChoice"
+              type="color"
+              value={form.colorChoice || "#ffffff"}
+              onChange={(e) => setForm((f) => ({ ...f, colorChoice: e.target.value }))}
+              disabled={loading}
+              className="h-10 w-16 cursor-pointer rounded-md border border-slate-200 p-1 disabled:opacity-50"
+            />
+            <span className="text-sm text-slate-500">
+              Selected: <span className="font-mono">{form.colorChoice || "#ffffff"}</span>
+            </span>
+          </div>
+          <p className="text-xs text-slate-400">Click the color box to open the color wheel.</p>
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <Label htmlFor="preferredDate">Preferred Date</Label>

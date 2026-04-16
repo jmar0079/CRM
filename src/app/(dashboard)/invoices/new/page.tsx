@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,81 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 import { Suspense } from "react";
 
+interface Customer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+}
+
 interface LineItem {
   description: string;
   quantity: number;
   unitPrice: number;
+}
+
+function CustomerSearch({ value, onChange }: { value: string; onChange: (id: string, name: string) => void }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Customer[]>([]);
+  const [selectedName, setSelectedName] = useState("");
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!value) { setSelectedName(""); setQuery(""); }
+  }, [value]);
+
+  function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const q = e.target.value;
+    setQuery(q);
+    setSelectedName("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      if (!q.trim()) { setResults([]); setOpen(false); return; }
+      const res = await fetch(`/api/customers?q=${encodeURIComponent(q)}&page=1`);
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data.customers ?? []);
+        setOpen(true);
+      }
+    }, 300);
+  }
+
+  function select(c: Customer) {
+    const name = `${c.firstName} ${c.lastName}`;
+    setSelectedName(name);
+    setQuery(name);
+    setResults([]);
+    setOpen(false);
+    onChange(c.id, name);
+  }
+
+  return (
+    <div className="relative">
+      <Input
+        placeholder="Search customers…"
+        value={query}
+        onChange={handleInput}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onFocus={() => results.length > 0 && setOpen(true)}
+      />
+      {open && results.length > 0 && (
+        <ul className="absolute z-50 mt-1 w-full rounded-md border border-slate-200 bg-white shadow-lg text-sm max-h-48 overflow-y-auto">
+          {results.map((c) => (
+            <li
+              key={c.id}
+              className="cursor-pointer px-3 py-2 hover:bg-slate-50"
+              onMouseDown={() => select(c)}
+            >
+              <span className="font-medium">{c.firstName} {c.lastName}</span>
+              {c.email && <span className="ml-2 text-slate-400">{c.email}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {selectedName && <p className="mt-1 text-xs text-green-600">Selected: {selectedName}</p>}
+    </div>
+  );
 }
 
 function NewInvoiceForm() {
@@ -53,6 +124,10 @@ function NewInvoiceForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.customerId) {
+      setError("Please select a customer.");
+      return;
+    }
     if (items.some((i) => !i.description.trim())) {
       setError("All line items need a description.");
       return;
@@ -90,13 +165,12 @@ function NewInvoiceForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="customerId">Customer ID</Label>
-          <Input id="customerId" value={form.customerId} onChange={updateForm("customerId")} disabled={loading} placeholder="cus_…" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="jobId">Job ID</Label>
-          <Input id="jobId" value={form.jobId} onChange={updateForm("jobId")} disabled={loading} placeholder="job_…" />
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label>Customer *</Label>
+          <CustomerSearch
+            value={form.customerId}
+            onChange={(id) => setForm((f) => ({ ...f, customerId: id }))}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="dueDate">Due Date *</Label>

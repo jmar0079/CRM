@@ -13,5 +13,5 @@ export default async function OrganizationSettingsPage() {
   const org = await db.organization.findUnique({ where: { id: orgId } });
   if (!org) notFound();
 
-  return <OrgSettingsForm org={org} />;
+  return <OrgSettingsForm org={{ ...org, categories: JSON.parse(org.categories ?? "[]") }} />;
 }

@@ -15,13 +15,14 @@ interface Service {
   price: number | null;
   durationMinutes: number | null;
   category: string | null;
+  hasColorOption: boolean;
 }
 
 interface ServiceManagerProps {
   initialServices: Service[];
 }
 
-const emptyForm = { name: "", description: "", price: "", durationMinutes: "", category: "" };
+const emptyForm = { name: "", description: "", price: "", durationMinutes: "", category: "", hasColorOption: false };
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
@@ -62,6 +63,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
           price: form.price !== "" ? parseFloat(form.price) : undefined,
           durationMinutes: form.durationMinutes !== "" ? parseInt(form.durationMinutes) : undefined,
           category: form.category || undefined,
+          hasColorOption: form.hasColorOption,
         }),
       });
       const data = await res.json();
@@ -84,6 +86,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
       price: svc.price != null ? String(svc.price) : "",
       durationMinutes: svc.durationMinutes != null ? String(svc.durationMinutes) : "",
       category: svc.category ?? "",
+      hasColorOption: svc.hasColorOption,
     });
     setError("");
   }
@@ -107,6 +110,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
           price: editForm.price !== "" ? parseFloat(editForm.price) : null,
           durationMinutes: editForm.durationMinutes !== "" ? parseInt(editForm.durationMinutes) : null,
           category: editForm.category || null,
+          hasColorOption: editForm.hasColorOption,
         }),
       });
       const data = await res.json();
@@ -209,6 +213,18 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
                   rows={2}
                 />
               </div>
+              <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="add-has-color"
+                  checked={form.hasColorOption}
+                  onChange={(e) => setForm((f) => ({ ...f, hasColorOption: e.target.checked }))}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                />
+                <Label htmlFor="add-has-color" className="text-xs cursor-pointer">
+                  Allow customers to pick a color when booking this service
+                </Label>
+              </div>
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" size="sm" onClick={cancelAdd} disabled={saving}>
@@ -276,6 +292,18 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
                         rows={2}
                       />
                     </div>
+                    <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+                      <input
+                        type="checkbox"
+                        id={`edit-has-color-${svc.id}`}
+                        checked={editForm.hasColorOption}
+                        onChange={(e) => setEditForm((f) => ({ ...f, hasColorOption: e.target.checked }))}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                      />
+                      <Label htmlFor={`edit-has-color-${svc.id}`} className="text-xs cursor-pointer">
+                        Allow customers to pick a color when booking this service
+                      </Label>
+                    </div>
                   </div>
                   <div className="flex gap-2 justify-end">
                     <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={saving}>
@@ -296,6 +324,11 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
                     )}
                     {svc.description && (
                       <p className="text-xs text-slate-500 mt-0.5">{svc.description}</p>
+                    )}
+                    {svc.hasColorOption && (
+                      <span className="inline-flex items-center gap-1 mt-1 rounded-full bg-purple-50 px-2 py-0.5 text-xs text-purple-700 border border-purple-200">
+                        🎨 Color picker enabled
+                      </span>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
