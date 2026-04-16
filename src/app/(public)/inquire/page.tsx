@@ -9,21 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Search, ArrowLeft, Building2, Phone, Globe, MapPin, ChevronRight } from "lucide-react";
 
-const SERVICE_CATEGORIES = [
-  "Plumbing",
-  "Electrical",
-  "HVAC",
-  "Roofing",
-  "Painting",
-  "Cleaning",
-  "Landscaping",
-  "Carpentry",
-  "Automotive",
-  "Home Repair",
-  "Appliance Repair",
-  "Pest Control",
-  "Other",
-];
+
 
 interface MatchingService {
   id: string;
@@ -51,6 +37,15 @@ export default function InquirePage() {
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<OrgResult[] | null>(null);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+
+  // Fetch categories dynamically from all orgs
+  useEffect(() => {
+    fetch("/api/public/categories")
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d.categories)) setCategories(d.categories); })
+      .catch(() => {});
+  }, []);
 
   // Pre-fill from customer session if present
   useEffect(() => {
@@ -135,7 +130,7 @@ export default function InquirePage() {
                       <SelectValue placeholder="Any category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {SERVICE_CATEGORIES.map((cat) => (
+                      {categories.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}
                         </SelectItem>
