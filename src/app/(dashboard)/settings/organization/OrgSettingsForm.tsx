@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2, Globe, LayoutList, Wrench, ShoppingBag, Check } from "lucide-react";
+import { ArrowLeft, Loader2, Globe, LayoutList, Wrench, ShoppingBag, Check, X } from "lucide-react";
 import Link from "next/link";
 
 const BUSINESS_CATEGORIES = [
@@ -38,6 +38,8 @@ export function OrgSettingsForm({ org }: OrgFormProps) {
   const [error, setError] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customInput, setCustomInput] = useState("");
   const [form, setForm] = useState({
     name: org.name,
     phone: org.phone ?? "",
@@ -58,6 +60,16 @@ export function OrgSettingsForm({ org }: OrgFormProps) {
         ? f.categories.filter((c) => c !== cat)
         : [...f.categories, cat],
     }));
+  }
+
+  function addCustomCategory() {
+    const trimmed = customInput.trim();
+    if (!trimmed) return;
+    if (!form.categories.includes(trimmed)) {
+      setForm((f) => ({ ...f, categories: [...f.categories, trimmed] }));
+    }
+    setCustomInput("");
+    setShowCustomInput(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -198,7 +210,8 @@ export function OrgSettingsForm({ org }: OrgFormProps) {
                 Select all categories that describe your business. Customers can filter by these when searching.
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
-                {BUSINESS_CATEGORIES.map((cat) => {
+                {/* Preset categories (excluding "Other") */}
+                {BUSINESS_CATEGORIES.filter((c) => c !== "Other").map((cat) => {
                   const selected = form.categories.includes(cat);
                   return (
                     <button
@@ -216,7 +229,58 @@ export function OrgSettingsForm({ org }: OrgFormProps) {
                     </button>
                   );
                 })}
+                {/* Custom categories (not in preset list) */}
+                {form.categories
+                  .filter((c) => !BUSINESS_CATEGORIES.includes(c))
+                  .map((cat) => (
+                    <span
+                      key={cat}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-blue-500 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700"
+                    >
+                      <Check className="h-3 w-3" />
+                      {cat}
+                      <button
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, categories: f.categories.filter((c) => c !== cat) }))}
+                        className="ml-0.5 rounded-full hover:text-blue-900"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                {/* Other button */}
+                <button
+                  type="button"
+                  onClick={() => setShowCustomInput((v) => !v)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
+                    showCustomInput
+                      ? "border-blue-500 bg-blue-50 text-blue-700"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  + Other
+                </button>
               </div>
+              {/* Custom category input */}
+              {showCustomInput && (
+                <div className="flex gap-2 pt-1">
+                  <Input
+                    placeholder="e.g. Fence Installation"
+                    value={customInput}
+                    onChange={(e) => setCustomInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomCategory(); } }}
+                    className="h-8 text-sm max-w-xs"
+                    autoFocus
+                    maxLength={50}
+                  />
+                  <Button type="button" size="sm" onClick={addCustomCategory} disabled={!customInput.trim()}>
+                    Add
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => { setShowCustomInput(false); setCustomInput(""); }}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
               {form.categories.length === 0 && (
                 <p className="text-xs text-amber-600">No categories selected — your business won&apos;t appear in category searches.</p>
               )}

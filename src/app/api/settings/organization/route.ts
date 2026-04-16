@@ -2,12 +2,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-const ALLOWED_CATEGORIES = [
-  "Plumbing", "Electrical", "HVAC", "Roofing", "Painting", "Cleaning",
-  "Landscaping", "Carpentry", "Automotive", "Home Repair", "Appliance Repair",
-  "Pest Control", "Other",
-];
-
 export async function PATCH(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,11 +43,16 @@ export async function PATCH(req: Request) {
       if (!Array.isArray(body.categories)) {
         return NextResponse.json({ error: "categories must be an array." }, { status: 400 });
       }
-      const invalid = (body.categories as string[]).filter((c) => !ALLOWED_CATEGORIES.includes(c));
-      if (invalid.length > 0) {
-        return NextResponse.json({ error: `Invalid categories: ${invalid.join(", ")}` }, { status: 400 });
+      const cats = body.categories as unknown[];
+      if (cats.length > 20) {
+        return NextResponse.json({ error: "Too many categories (max 20)." }, { status: 400 });
       }
-      categoriesJson = JSON.stringify(body.categories);
+      for (const c of cats) {
+        if (typeof c !== "string" || c.trim().length === 0 || c.trim().length > 50) {
+          return NextResponse.json({ error: "Each category must be a non-empty string under 50 characters." }, { status: 400 });
+        }
+      }
+      categoriesJson = JSON.stringify((cats as string[]).map((c) => c.trim()));
     }
 
     const updated = await db.organization.update({
