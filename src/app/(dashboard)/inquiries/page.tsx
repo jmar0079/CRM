@@ -200,24 +200,26 @@ export default function InquiriesPage() {
                           <CheckCircle className="h-3 w-3" />
                           Converted to Lead
                         </Badge>
-                      ) : inquiry.contactedAt ? (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          Contacted
-                        </Badge>
                       ) : (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateInquiry(inquiry.id, "contact")}
-                            disabled={updating === inquiry.id}
-                          >
-                            {updating === inquiry.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                            ) : null}
-                            Contact
-                          </Button>
+                        <div className="flex items-center gap-2">
+                          {inquiry.contactedAt ? (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Contacted
+                            </Badge>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateInquiry(inquiry.id, "contact")}
+                              disabled={updating === inquiry.id}
+                            >
+                              {updating === inquiry.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                              ) : null}
+                              Contact
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             onClick={() => createLeadFromInquiry(inquiry)}
