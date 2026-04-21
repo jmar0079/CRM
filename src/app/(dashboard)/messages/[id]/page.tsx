@@ -112,6 +112,13 @@ export default function ThreadPage() {
         </div>
       </div>
 
+      {/* SMS warning */}
+      {thread.channel === "SMS" && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+          This thread is SMS-based. SMS is not currently configured — replies will not be delivered.
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
         {thread.messages.length === 0 && (

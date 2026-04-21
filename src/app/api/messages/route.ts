@@ -74,6 +74,12 @@ export async function POST(req: Request) {
       : null;
 
     // Dispatch (errors non-blocking to preserve message record)
+    if (channel === "SMS") {
+      if (!process.env.TWILIO_ACCOUNT_SID) {
+        await db.message.update({ where: { id: message.id }, data: { status: "FAILED" } });
+        return NextResponse.json({ error: "SMS is not configured." }, { status: 400 });
+      }
+    }
     if (channel === "SMS" && contact?.phone) {
       await sendSMS(contact.phone, messageBody)
         .then(() => db.message.update({ where: { id: message.id }, data: { status: "SENT" } }))

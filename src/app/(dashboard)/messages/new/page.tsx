@@ -35,7 +35,7 @@ export default function NewMessagePage() {
   const [formData, setFormData] = useState({
     recipientType: "customer" as "customer" | "lead",
     recipientId: "",
-    channel: "SMS" as "SMS" | "EMAIL",
+    channel: "EMAIL" as "EMAIL",
     subject: "",
     body: "",
   });
@@ -160,7 +160,7 @@ export default function NewMessagePage() {
           <Label htmlFor="channel">Channel</Label>
           <Select
             value={formData.channel}
-            onValueChange={(value: "SMS" | "EMAIL") =>
+            onValueChange={(value: "EMAIL") =>
               setFormData(prev => ({ ...prev, channel: value }))
             }
           >
@@ -168,7 +168,6 @@ export default function NewMessagePage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="SMS">SMS</SelectItem>
               <SelectItem value="EMAIL">Email</SelectItem>
             </SelectContent>
           </Select>
