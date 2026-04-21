@@ -60,10 +60,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    // Duplicate detection
-    const dupId = await detectDuplicate(orgId, parsed.data.phone, parsed.data.email);
-    if (dupId) {
-      return NextResponse.json({ error: "A lead or customer with this contact already exists.", duplicateId: dupId }, { status: 409 });
+    // Duplicate detection (skipped when explicitly creating from an inquiry)
+    const skipDuplicateCheck = (body as Record<string, unknown>).skipDuplicateCheck === true;
+    if (!skipDuplicateCheck) {
+      const dupId = await detectDuplicate(orgId, parsed.data.phone, parsed.data.email);
+      if (dupId) {
+        return NextResponse.json({ error: "A lead or customer with this contact already exists.", duplicateId: dupId }, { status: 409 });
+      }
     }
 
     const { tags, ...data } = parsed.data as typeof parsed.data & { tags?: string[] };

@@ -88,7 +88,7 @@ export default function InquiriesPage() {
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(leadData)
+        body: JSON.stringify({ ...leadData, skipDuplicateCheck: true })
       });
 
       if (response.ok) {
