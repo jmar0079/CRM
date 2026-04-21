@@ -46,6 +46,11 @@ export async function generateInvoiceNumber(orgId: string): Promise<string> {
   return `INV-${String(count + 1).padStart(4, "0")}`;
 }
 
+// Only treat as an active duplicate if the lead is still in-progress.
+// COMPLETED and LOST leads are done — a new booking from the same person
+// should create a fresh lead.
+const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "QUOTE_SENT", "SCHEDULED"] as const;
+
 export async function detectDuplicate(
   orgId: string,
   phone?: string,
@@ -53,7 +58,7 @@ export async function detectDuplicate(
 ): Promise<{ type: "lead" | "customer"; id: string } | null> {
   if (phone) {
     const lead = await db.lead.findFirst({
-      where: { orgId, phone, isArchived: false },
+      where: { orgId, phone, isArchived: false, status: { in: ACTIVE_LEAD_STATUSES as never } },
       select: { id: true },
     });
     if (lead) return { type: "lead", id: lead.id };
@@ -67,7 +72,7 @@ export async function detectDuplicate(
 
   if (email) {
     const lead = await db.lead.findFirst({
-      where: { orgId, email, isArchived: false },
+      where: { orgId, email, isArchived: false, status: { in: ACTIVE_LEAD_STATUSES as never } },
       select: { id: true },
     });
     if (lead) return { type: "lead", id: lead.id };
