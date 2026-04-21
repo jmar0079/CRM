@@ -48,7 +48,9 @@ export function getInitials(name: string): string {
 export function slugify(text: string): string {
   return text
     .toLowerCase()
+    .trim()
     .replace(/[^\w\s-]/g, "")
+    .trim()
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
