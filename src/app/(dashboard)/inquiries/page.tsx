@@ -31,6 +31,7 @@ export default function InquiriesPage() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -80,11 +81,12 @@ export default function InquiriesPage() {
       serviceInterest: inquiry.serviceName,
       notes: inquiry.description,
       address: inquiry.location,
-      source: "INQUIRY" as const,
+      source: "OTHER" as const,
       sourceDetail: `Service inquiry for ${inquiry.serviceName}`
     };
 
     try {
+      setCreateError(null);
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,9 +97,13 @@ export default function InquiriesPage() {
         const { lead } = await response.json();
         await updateInquiry(inquiry.id, "create_lead", lead.id);
         router.push(`/leads/${lead.id}`);
+      } else {
+        const data = await response.json().catch(() => ({}));
+        setCreateError(data.error ?? "Failed to create lead. Please try again.");
       }
     } catch (error) {
       console.error("Failed to create lead:", error);
+      setCreateError("Failed to create lead. Please try again.");
     }
   };
 
@@ -117,6 +123,12 @@ export default function InquiriesPage() {
           Customers looking for services that match your offerings
         </p>
       </div>
+
+      {createError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {createError}
+        </div>
+      )}
 
       <div className="grid gap-4">
         {inquiries.length === 0 ? (
