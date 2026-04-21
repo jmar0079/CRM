@@ -201,15 +201,12 @@ export default function NewMessagePage() {
             <p className="text-blue-800 font-medium">
               Sending to: {selectedRecipient.firstName} {selectedRecipient.lastName}
             </p>
-            {formData.channel === "SMS" && selectedRecipient.phone && (
-              <p className="text-blue-700 text-sm">Phone: {selectedRecipient.phone}</p>
-            )}
-            {formData.channel === "EMAIL" && selectedRecipient.email && (
+            {selectedRecipient.email && (
               <p className="text-blue-700 text-sm">Email: {selectedRecipient.email}</p>
             )}
             {!hasContactInfo && (
               <p className="text-yellow-700 text-sm mt-1">
-                No {formData.channel === "SMS" ? "phone number" : "email address"} on file.
+                No email address on file.
               </p>
             )}
           </div>
@@ -218,7 +215,7 @@ export default function NewMessagePage() {
         {selectedRecipient && !hasContactInfo && (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-yellow-800">
-              Warning: Selected recipient does not have a {formData.channel === "SMS" ? "phone number" : "email address"} on file.
+              Warning: Selected recipient does not have an email address on file.
               The message may not be delivered.
             </p>
           </div>
