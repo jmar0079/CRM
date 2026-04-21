@@ -92,7 +92,7 @@ export default function NewMessagePage() {
     ? customers.find(c => c.id === formData.recipientId)
     : leads.find(l => l.id === formData.recipientId);
 
-  const hasContactInfo = selectedRecipient?.[formData.channel === "SMS" ? "phone" : "email"];
+  const hasContactInfo = selectedRecipient?.["email"];
 
   if (loading) {
     return (
