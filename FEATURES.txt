@@ -1,0 +1,644 @@
+================================================================================
+  CRM APP — FEATURES & DOCUMENTATION
+  Last updated: April 21, 2026
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1.  Overview
+2.  Authentication & Multi-Tenancy
+3.  Dashboard
+4.  Leads
+5.  Customers
+6.  Jobs & Appointments
+7.  Quotes
+8.  Invoices & Payments
+9.  Tasks
+10. Messages
+11. Pipeline
+12. Analytics
+13. Service Inquiries (Marketplace)
+14. Calendar
+15. Public-Facing Pages
+16. Customer Portal
+17. Settings
+18. Integrations
+19. Automation & AI
+20. Roles & Permissions
+21. Data Models Summary
+22. Environment Variables Reference
+
+
+================================================================================
+1. OVERVIEW
+================================================================================
+
+A multi-tenant CRM (Customer Relationship Management) platform built for service
+businesses. Each organization (business) has its own isolated data, team, and
+settings. Customers interact through public-facing booking and portal pages.
+Staff manage everything through the private dashboard.
+
+Tech stack:
+  - Framework:  Next.js 16 (App Router)
+  - Database:   Neon PostgreSQL via Prisma ORM
+  - Auth:       NextAuth.js (JWT sessions)
+  - Email:      Resend
+  - SMS:        Twilio (optional)
+  - Payments:   Stripe, PayPal, Square/Cash App
+  - AI:         Groq (llama-3.3-70b)
+  - Hosting:    Vercel
+
+
+================================================================================
+2. AUTHENTICATION & MULTI-TENANCY
+================================================================================
+
+REGISTRATION
+  - Business owner registers at /register
+  - Creates an Organization record and a User record (role: OWNER)
+  - Organization gets a unique slug (used in public booking URLs)
+
+LOGIN
+  - Email + password via /login
+  - Session stored as JWT (secure, HttpOnly cookie)
+  - Session contains: userId, orgId, role, name
+
+MULTI-TENANCY
+  - All data is scoped to an orgId
+  - Team members log in and automatically see only their org's data
+  - Exception: Service Inquiries marketplace is global (not org-scoped)
+
+
+================================================================================
+3. DASHBOARD
+================================================================================
+
+Route: /dashboard
+
+OVERVIEW CARDS (real-time KPIs)
+  - Total active leads this month
+  - New customers this month
+  - Jobs completed this month
+  - Revenue generated this month
+  - Pending tasks count
+  - Overdue invoices count
+
+CHARTS & GRAPHS
+  - 6-month revenue trend (bar chart)
+  - Lead conversion rate (%)
+  - Lead sources breakdown
+  - Repeat customer rate
+  - Average ticket size
+
+QUICK ACTIONS
+  - Link to create new lead, customer, job, or invoice
+
+
+================================================================================
+4. LEADS
+================================================================================
+
+Route: /leads
+
+A "lead" is a prospective customer who has expressed interest but hasn't been
+converted to a paying customer yet.
+
+LIFE CYCLE STATUSES
+  NEW → CONTACTED → QUOTE_SENT → SCHEDULED → COMPLETED or LOST
+
+LEAD SOURCES
+  Google, Instagram, Facebook, TikTok, Referral, Website, Walk-In, Yelp, Other
+
+FEATURES
+  - Create lead manually from /leads/new
+  - Auto-created when someone fills out the public booking form
+  - Auto-created from Service Inquiry marketplace (via "Create Lead" button)
+  - Duplicate detection: blocks a second lead if an active lead (status NEW,
+    CONTACTED, QUOTE_SENT, or SCHEDULED) already exists for the same phone/email
+  - Repeat customers: if a prior lead is COMPLETED or LOST, a new booking
+    creates a fresh lead automatically
+  - Convert lead to customer (creates Customer record + draft Invoice)
+  - Archive leads instead of deleting (soft delete via isArchived flag)
+  - Tag leads with custom labels
+  - Assign to pipeline stages
+  - Track estimated value
+  - Full activity timeline per lead
+
+LEAD DETAIL PAGE (/leads/[id])
+  - Contact info (name, email, phone, address)
+  - Status badge + source label
+  - Service interest, preferred date/time, notes
+  - Pending tasks list
+  - Recent quotes
+  - Recent message threads
+  - Activity log
+  - Convert to Customer button
+  - Delete button
+
+NEW LEAD FORM (/leads/new)
+  - First/last name (required)
+  - Email, phone, address
+  - Source, service interest, estimated value
+  - Pipeline stage assignment
+  - Notes
+
+
+================================================================================
+5. CUSTOMERS
+================================================================================
+
+Route: /customers
+
+A "customer" is a converted lead (or manually created contact) who has had at
+least one job or transaction.
+
+FEATURES
+  - Full contact profile (name, email, phone, address)
+  - Vehicle information (year, make, model, color, license plate)
+  - Lifetime value tracking
+  - Job history
+  - Invoice history
+  - Message threads
+  - Tags and notes
+
+CUSTOMER DETAIL PAGE (/customers/[id])
+  - All contact and vehicle info
+  - Job list with statuses and totals
+  - Invoice list with payment status
+  - Message history
+  - Activity log
+  - Edit and delete actions
+
+
+================================================================================
+6. JOBS & APPOINTMENTS
+================================================================================
+
+Route: /jobs
+
+A "job" is a scheduled service appointment linked to a customer.
+
+JOB STATUSES
+  SCHEDULED → IN_PROGRESS → COMPLETED
+  (+ CANCELED, NO_SHOW)
+
+FEATURES
+  - Create jobs from /jobs/new
+  - Link to a customer
+  - Assign to a team member
+  - Schedule date and time
+  - Track service type and price
+  - Add notes
+  - View all jobs on a calendar (/calendar)
+
+JOB DETAIL PAGE (/jobs/[id])
+  - Customer info
+  - Scheduled date/time
+  - Status badge
+  - Assigned staff
+  - Price
+  - Notes
+  - Connected tasks
+
+
+================================================================================
+7. QUOTES
+================================================================================
+
+Route: /quotes
+
+FEATURES
+  - Auto-created as DRAFT when a lead submits the booking form
+  - Manually created from /quotes/new
+  - Line-item based (description, quantity, unit price, total)
+  - Auto-calculated subtotal and total
+  - Sent to customer via email with an approval link
+  - Customer approves or declines at /quote/[token]
+  - Status tracking: DRAFT → SENT → APPROVED / DECLINED
+
+QUOTE DETAIL PAGE (/quotes/[id])
+  - Line items editor
+  - Status badge
+  - Customer info
+  - Send by email button
+  - Public approval link
+
+
+================================================================================
+8. INVOICES & PAYMENTS
+================================================================================
+
+Route: /invoices
+
+INVOICE STATUSES
+  DRAFT → SENT → PAID
+  (+ UNPAID, PARTIAL, OVERDUE)
+
+FEATURES
+  - Auto-created when a lead is converted to a customer
+  - Manually created from /invoices/new
+  - Line-item based pricing
+  - Email invoice to customer (includes Pay Now button)
+  - Customer pays via:
+      • Stripe (card payments)
+      • PayPal (per-org credentials, encrypted in DB)
+      • Square / Cash App Pay
+  - Track partial payments
+  - Mark as paid manually
+  - Overdue detection
+
+PAYMENT SECURITY
+  - PayPal credentials stored encrypted (AES-256) in the database per org
+  - A 4-digit PIN is required to access PayPal settings
+  - PIN stored as a bcrypt hash
+
+
+================================================================================
+9. TASKS
+================================================================================
+
+Route: /tasks
+
+TASK PRIORITIES
+  LOW, MEDIUM, HIGH, URGENT
+
+TASK STATUSES
+  PENDING, IN_PROGRESS, COMPLETED, CANCELED
+
+FEATURES
+  - Create tasks manually or via automation
+  - Link to a lead, customer, or job
+  - Set due date and priority
+  - Assign to a team member
+  - Auto-created when a lead is captured ("Contact within 1 hour" — HIGH priority)
+  - Overdue tasks highlighted in red
+  - Filter by status, priority, due date
+
+
+================================================================================
+10. MESSAGES
+================================================================================
+
+Route: /messages
+
+CHANNELS
+  - EMAIL (active — via Resend)
+  - SMS (optional — requires Twilio credentials)
+  - WhatsApp (data model ready, not yet implemented)
+
+FEATURES
+  - Thread-based conversations (all messages to/from one contact are grouped)
+  - Send email to any customer or lead from /messages/new
+  - Reply inside a thread from /messages/[id]
+  - Auto-marks inbound messages as READ when thread is opened
+  - Inbound SMS handled via Twilio webhook (/api/webhooks/twilio)
+  - Customers can message the business from the portal (creates inbound thread)
+  - Message status tracking: PENDING → SENT → DELIVERED → READ → FAILED
+  - Message templates with variable substitution ({{firstName}}, etc.)
+  - Blue dot on unresolved threads
+
+NOTE: SMS requires Twilio account. If not configured, SMS is blocked with a
+clear error. Email (Resend) works on the free tier (3,000 emails/month).
+
+
+================================================================================
+11. PIPELINE
+================================================================================
+
+Route: /pipeline
+
+  - Kanban board view of leads organized by pipeline stage
+  - Each column shows lead count and total estimated value
+  - Move leads between stages by editing the lead
+  - Stages are customizable in Settings → Pipeline
+  - Default stages can be created per organization
+
+
+================================================================================
+12. ANALYTICS
+================================================================================
+
+Route: /analytics
+
+METRICS AVAILABLE
+  - Revenue by month (6-month bar chart)
+  - Jobs completed per month
+  - Lead conversion rate (leads → customers)
+  - Lead sources breakdown (which channels drive most leads)
+  - Top services by revenue
+  - Repeat customer rate
+  - Average ticket size
+
+
+================================================================================
+13. SERVICE INQUIRIES (MARKETPLACE)
+================================================================================
+
+Route: /inquiries (dashboard) and /inquire (public)
+
+This is a global marketplace feature where customers from anywhere can submit a
+service request and get matched to relevant businesses.
+
+PUBLIC SIDE (/inquire)
+  - Anyone can submit a service inquiry with name, email, phone, service needed,
+    location, urgency level, and description
+  - Not linked to any specific business
+
+BUSINESS SIDE (/inquiries)
+  - CRM shows matched inquiries with a relevance score (0–100%)
+  - Staff can:
+      • Click "Contact" to mark the inquiry as contacted
+      • Click "Create Lead" to convert it into a real lead in the CRM
+  - Once converted, badge changes to "Converted to Lead" and links to the lead
+
+MATCH SCORING
+  - Based on service category overlap between inquiry and org's services
+  - Score shown as a percentage (e.g., "Match: 72%")
+  - Urgency badge: LOW, HIGH, URGENT
+
+
+================================================================================
+14. CALENDAR
+================================================================================
+
+Route: /calendar
+
+  - Monthly calendar view of all scheduled jobs
+  - Navigate forward/backward by month
+  - Each day shows jobs with customer name and time
+  - Click a job to view its detail page
+
+
+================================================================================
+15. PUBLIC-FACING PAGES
+================================================================================
+
+These pages are accessible without logging in. URLs include the org slug or
+a secure token.
+
+BOOKING FORM (/book?org=[slug])
+  - Service request form for the business's customers
+  - Captures: name, email, phone, address, service interest, preferred date/time,
+    color choice (optional), notes
+  - Supports "PRODUCT" or "SERVICE" mode (labels adjust accordingly)
+  - On submit: creates a Lead + Activity log + auto task + draft Quote
+  - Sends confirmation email to the customer (via Resend)
+  - Duplicate detection prevents duplicate open leads
+
+INQUIRE (/inquire)
+  - Global service inquiry form (see Section 13)
+
+QUOTE APPROVAL (/quote/[token])
+  - Customers review and approve or decline a quote
+  - No login required (secure token in URL)
+  - On approval: quote status → APPROVED, notification sent to staff
+
+REVIEW (/review/[token])
+  - Post-service feedback form
+  - Customer submits a star rating and written review
+  - Stored as a Review record linked to the org
+
+CUSTOMER REGISTER (/customer/register)
+  - New customers can register themselves (not staff)
+
+
+================================================================================
+16. CUSTOMER PORTAL
+================================================================================
+
+Route: /portal (accessed with customerId + orgId)
+
+FEATURES
+  - View invoices and their payment status
+  - Pay invoices online (Stripe, PayPal, or Cash App)
+  - View service history (completed jobs)
+  - Submit a message to the business (creates inbound EMAIL thread)
+  - Submit a review (redirected to /review/[token])
+
+PAYMENT FLOW
+  - Customer clicks "Pay Now" on an invoice
+  - Redirected to Stripe, PayPal, or Square depending on org's configuration
+  - Webhook confirms payment and marks invoice as PAID
+
+
+================================================================================
+17. SETTINGS
+================================================================================
+
+Route: /settings (and sub-pages)
+
+ORGANIZATION (/settings/organization)
+  - Business name, logo URL, timezone, currency
+  - Booking form mode (SERVICE or PRODUCT)
+  - Booking URL configuration (custom URL or built-in form)
+  - Service categories (used in booking form dropdown)
+  - Working hours
+
+TEAM (/settings/team)
+  - View all team members and their roles
+  - Invite new team members by email
+  - Assign roles: OWNER, MANAGER, STAFF
+  - Remove team members
+
+SERVICES (/settings/services)
+  - Define the service catalog (name, description, price, duration)
+  - Services appear in quote line items and booking form
+
+PIPELINE STAGES (/settings/pipeline)
+  - Add, rename, reorder, and delete pipeline stages
+  - Each stage has a name, color, and position
+  - Leads are assigned to stages on the /pipeline Kanban board
+
+NOTIFICATIONS (/settings/notifications)
+  - Toggle email/SMS notifications for:
+      • New lead received
+      • New message received
+      • Task due reminder
+
+PAYPAL (/settings/paypal)
+  - Connect PayPal credentials (Client ID + Secret) per organization
+  - Credentials stored encrypted in the database (AES-256)
+  - Protected by a 4-digit PIN (bcrypt-hashed)
+  - Toggle between SANDBOX and LIVE mode
+
+
+================================================================================
+18. INTEGRATIONS
+================================================================================
+
+RESEND (Email)
+  - Used for: quote emails, invoice emails, booking confirmations, notifications
+  - Free tier: 3,000 emails/month, 100/day
+  - Requires: RESEND_API_KEY, EMAIL_FROM
+  - Note: EMAIL_FROM must be a verified domain in Resend (or use
+    onboarding@resend.dev for testing only)
+
+TWILIO (SMS) — Optional
+  - Used for: outbound SMS to leads/customers, inbound SMS from customers
+  - Inbound webhook endpoint: /api/webhooks/twilio
+  - Requires: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
+  - If not configured, SMS is blocked gracefully (no crash)
+
+STRIPE
+  - Used for: invoice payment links
+  - Requires: STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
+  - Webhook endpoint: /api/webhooks/stripe
+
+PAYPAL
+  - Used for: invoice payments (per-org credentials stored in DB)
+  - Configured per organization in Settings → PayPal
+  - Requires global: PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENV,
+    PAYPAL_WEBHOOK_ID
+  - Webhook endpoint: /api/webhooks/paypal
+
+SQUARE / CASH APP PAY
+  - Used for: invoice payments
+  - Requires: SQUARE_ACCESS_TOKEN, SQUARE_LOCATION_ID, SQUARE_ENV,
+    SQUARE_WEBHOOK_SIGNATURE_KEY, SQUARE_WEBHOOK_URL
+  - Webhook endpoint: /api/webhooks/cashapp
+
+GROQ AI
+  - Used for: AI chat assistant widget (bottom-right of all dashboard pages)
+  - Model: llama-3.3-70b-versatile
+  - Answers questions about the CRM, helps staff navigate features
+  - Endpoint: /api/chat
+  - Requires: GROQ_API_KEY
+
+NEON (Database)
+  - Serverless PostgreSQL
+  - Requires: DATABASE_URL (connection string with SSL)
+
+PRISMA
+  - ORM for all database operations
+  - Run "npx prisma generate" after schema changes
+  - Run "npx prisma db push" to apply schema changes to the DB
+
+
+================================================================================
+19. AUTOMATION & AI
+================================================================================
+
+AUTO TASK CREATION
+  - When a lead is created, a task is automatically created:
+    "Contact this lead within 1 hour" (priority: HIGH)
+  - Driven by AutomationRule records (trigger: LEAD_CREATED)
+
+AUTO QUOTE CREATION
+  - When a lead submits the booking form, a DRAFT quote is created
+  - Line items populated from the service catalog if a serviceId is provided
+
+AUTO INVOICE CREATION
+  - When a lead is converted to a customer, a DRAFT invoice is created
+
+ACTIVITY LOG
+  - 23 event types tracked automatically (LEAD_CREATED, JOB_COMPLETED,
+    QUOTE_APPROVED, INVOICE_PAID, MESSAGE_SENT, etc.)
+  - Shown as a timeline on lead and customer detail pages
+
+AI CHAT WIDGET
+  - Floating chat button on all dashboard pages
+  - Powered by Groq (llama-3.3-70b)
+  - Has context about all CRM features and can guide staff
+
+ONBOARDING CHECKLIST
+  - Shown to new organizations until all steps are completed:
+    1. Complete your profile
+    2. Add your first service
+    3. Customize your pipeline stages
+    4. Set up your booking link
+    5. Invite your first team member
+
+APP TOUR
+  - Interactive guided tour for new users
+  - Highlights key UI elements with popovers
+
+
+================================================================================
+20. ROLES & PERMISSIONS
+================================================================================
+
+OWNER
+  - Full access to all features and settings
+  - Can manage team, billing, and integrations
+
+MANAGER
+  - Access to all operational features (leads, jobs, quotes, etc.)
+  - Cannot delete the organization or manage billing
+
+STAFF
+  - Access to day-to-day operations (assigned tasks, jobs, messages)
+  - Limited access to settings
+
+
+================================================================================
+21. DATA MODELS SUMMARY
+================================================================================
+
+Core Models:
+  Organization    Business account (multi-tenant root)
+  User            Staff member belonging to an org
+  Lead            Prospective customer
+  Customer        Converted lead / paying customer
+  Job             Scheduled service appointment
+  Quote           Price estimate sent to a lead or customer
+  Invoice         Billing document (line items + total)
+  Payment         Individual payment against an invoice
+  Task            Action item linked to lead/customer/job
+  MessageThread   Conversation container (SMS or EMAIL)
+  Message         Individual message in a thread
+  MessageTemplate Reusable message with variable placeholders
+  Review          Customer star rating + written feedback
+  Activity        Audit log event (23 types)
+  Service         Service catalog item (name, price, duration)
+  PipelineStage   Kanban column for lead management
+  Tag             Label for leads or customers
+  AutomationRule  Trigger-action automation definition
+  FormSubmission  Raw JSON from public booking form
+  Notification    In-app notification record
+  ServiceInquiry  Global marketplace inquiry (not org-scoped)
+  ServiceInquiryMatch  Org↔inquiry match with relevance score
+
+
+================================================================================
+22. ENVIRONMENT VARIABLES REFERENCE
+================================================================================
+
+Required for basic operation:
+  DATABASE_URL              Neon PostgreSQL connection string
+  AUTH_SECRET               Random secret for NextAuth JWT signing
+  NEXTAUTH_URL              Full URL of the app (e.g. https://yourapp.vercel.app)
+  NEXT_PUBLIC_APP_URL       Same as NEXTAUTH_URL (used in public links)
+
+Email (required for notifications, quotes, invoices):
+  RESEND_API_KEY            From resend.com dashboard
+  EMAIL_FROM                Verified sender address (e.g. noreply@yourdomain.com)
+
+SMS (optional):
+  TWILIO_ACCOUNT_SID        Twilio account SID
+  TWILIO_AUTH_TOKEN         Twilio auth token
+  TWILIO_PHONE_NUMBER       Purchased Twilio phone number (+15551234567)
+
+Payments:
+  STRIPE_SECRET_KEY         Stripe secret key (sk_live_... or sk_test_...)
+  STRIPE_PUBLISHABLE_KEY    Stripe publishable key
+  STRIPE_WEBHOOK_SECRET     From Stripe webhook dashboard (whsec_...)
+  PAYPAL_CLIENT_ID          PayPal app client ID
+  PAYPAL_CLIENT_SECRET      PayPal app client secret
+  PAYPAL_ENV                "sandbox" or "live"
+  PAYPAL_WEBHOOK_ID         PayPal webhook ID
+  SQUARE_ACCESS_TOKEN       Square access token
+  SQUARE_LOCATION_ID        Square location ID
+  SQUARE_ENV                "sandbox" or "production"
+  SQUARE_WEBHOOK_SIGNATURE_KEY  Square webhook signature key
+  SQUARE_WEBHOOK_URL        Full URL of /api/webhooks/cashapp
+
+AI:
+  GROQ_API_KEY              From console.groq.com
+
+Encryption (PayPal credential storage):
+  ENCRYPTION_KEY            32-byte hex key for AES-256 encryption
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
